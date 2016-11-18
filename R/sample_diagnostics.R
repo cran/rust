@@ -2,11 +2,12 @@
 
 #' Plot diagnostics for an ru object
 #'
-#' \code{plot} method for class "ru".  Can only be used when d = 1 or d = 2.
-#'   For d = 1 a histogram of the simulated values is plotted with a the
-#'   density function superimposed.  The density is normalized crudely using
-#'   the trapezium rule.  For d = 2 a scatter plot of the simulated values
-#'   is produced with density contours superimposed.
+#' \code{plot} method for class "ru".  For \code{d = 1} a histogram of the
+#'   simulated values is plotted with a the density function superimposed.
+#'   The density is normalized crudely using the trapezium rule.  For
+#'   \code{d = 2} a scatter plot of the simulated values is produced with
+#'   density contours superimposed.  For \code{d > 2} pairwise plots of the
+#'   simulated values are produced using \code{pairs()}.
 #'
 #' @param x an object of class "ru", a result of a call to \code{ru}.
 #' @param y Not used.
@@ -24,7 +25,12 @@
 #' @param ru_scale A logical scalar.  Should we plot data and density on the
 #'   scale used in the ratio-of-uniforms algorithm (TRUE) or on the original
 #'   scale (FALSE)?
-#'   \code{hist} and \code{plot}.
+#' @param rows A numeric scalar.  When \code{d} > 2 this sets the number of
+#'   rows of plots.  If the user doesn't provide this then it is set
+#'   internally.
+#' @param xlabs,ylabs Numeric vectors.  When \code{d} > 2 these set the labels
+#'   on the x and y axes respectively.  if the use doesn't provide these then
+#'   the column names of the simulated data matrix to be plotted are used.
 #' @details
 #' Note that \code{suppressWarnings} is used to avoid potential benign warnings
 #'   caused by passing unused graphical parameters to \code{hist} and
@@ -60,13 +66,10 @@
 #'   and properties of the ratio-of-uniforms algorithm.
 #' @export
 plot.ru <- function(x, y, ..., n = ifelse(x$d == 1, 1001, 101),
-                     prob = c(0.1, 0.25, 0.5, 0.75, 0.95, 0.99),
-                     ru_scale = FALSE) {
+                    prob = c(0.1, 0.25, 0.5, 0.75, 0.95, 0.99),
+                    ru_scale = FALSE, rows = NULL, xlabs = NULL, ylabs = NULL) {
   if (!inherits(x, "ru")) {
     stop("use only with \"ru\" objects")
-  }
-  if(x$d > 2) {
-    stop("plot.ru is only available for d = 1 or d = 2")
   }
   if (n < 1) {
     stop("n must be no smaller than 1")
@@ -85,7 +88,6 @@ plot.ru <- function(x, y, ..., n = ifelse(x$d == 1, 1001, 101),
     b <- temp$breaks[length(temp$breaks)]
     h <- (b-a)/n
     xx <- seq(a, b, by = h)
-    for_logf <- c(list(xx), x$logf_args)
     density_fun <- function(z) {
       density_list <- c(list(z), x$logf_args)
       exp(do.call(plot_density, density_list))
@@ -100,8 +102,17 @@ plot.ru <- function(x, y, ..., n = ifelse(x$d == 1, 1001, 101),
     area <- h * (yy[1] / 2 + sum(yy[2:n]) + yy[n + 1] / 2)
     yy <- yy / area
     max_y <- max(temp$density, yy)
-    suppressWarnings(graphics::hist(plot_data, prob = TRUE, main="",
-                                    ylim = c(0, max_y), ...))
+    temp <- list(...)
+    if (is.null(temp$xlab)) {
+      suppressWarnings(graphics::hist(plot_data, prob = TRUE, main="",
+                                      ylim = c(0, max_y), xlab = "", ...))
+      if (!is.null(colnames(plot_data))) {
+        graphics::title(xlab = parse(text = colnames(plot_data)[1]))
+      }
+    } else {
+      suppressWarnings(graphics::hist(plot_data, prob = TRUE, main="",
+                                      ylim = c(0, max_y), ...))
+    }
     suppressWarnings(graphics::lines(xx, yy, ...))
   }
   if (x$d == 2) {
@@ -126,6 +137,43 @@ plot.ru <- function(x, y, ..., n = ifelse(x$d == 1, 1001, 101),
     graphics::points(plot_data, col = 8, ...)
     graphics::contour(xx, yy, zz, levels = con.levs, add = T, ann = T,
       labels = prob * 100, ...)
+    temp <- list(...)
+    if (is.null(temp$xlab)) {
+      if (!is.null(colnames(plot_data))) {
+        graphics::title(xlab = parse(text = colnames(plot_data)[1]))
+      }
+    }
+    if (is.null(temp$ylab)) {
+      if (!is.null(colnames(plot_data))) {
+        graphics::title(ylab = parse(text = colnames(plot_data)[2]))
+      }
+    }
+  }
+  if (x$d > 2) {
+    if (is.null(rows)) {
+      rows <- x$d -2
+    }
+    cols <- ceiling(choose(x$d, 2) / rows)
+    temp <- list(...)
+    if (is.null(xlabs)) {
+      xlabs <- colnames(plot_data)
+    }
+    if (is.null(ylabs)) {
+      ylabs <- colnames(plot_data)
+    }
+    def.par <- graphics::par(no.readonly = TRUE)
+    graphics::par(mfrow = c(rows, cols))
+    pairwise_plots <- function(x) {
+      for (i in 1:(ncol(x)-1)) {
+        for (j in (i+1):ncol(x)) {
+          graphics::plot(x[, i], x[, j], xlab = "", ylab = "", ...)
+          graphics::title(xlab = parse(text = xlabs[i]),
+                          ylab = parse(text = ylabs[j]))
+        }
+      }
+    }
+    pairwise_plots(plot_data)
+    graphics::par(def.par)
   }
 }
 
@@ -135,8 +183,7 @@ plot.ru <- function(x, y, ..., n = ifelse(x$d == 1, 1001, 101),
 #'
 #' \code{summary} method for class "ru"
 #'
-#' @param object an object of class "ru", a result of a call to
-#'   \code{ru}.
+#' @param object an object of class "ru", a result of a call to \code{ru}.
 #' @param ... Additional arguments passed on to \code{print} or \code{summary}.
 #' @return Prints
 #' \itemize{
@@ -168,13 +215,16 @@ plot.ru <- function(x, y, ..., n = ifelse(x$d == 1, 1001, 101),
 #'   and \code{d} = 2 only).
 #' @export
 summary.ru <- function(object, ...) {
-  cat("sample summary", "\n")
-  print(summary(object$sim_vals, ...), ...)
+  if (!inherits(object, "ru")) {
+    stop("use only with \"ru\" objects")
+  }
+  cat("ru bounding box: ", "\n")
+  print(object$box, ...)
   cat("\n")
   cat("estimated probability of acceptance: ", "\n")
   print(object$pa, ...)
   cat("\n")
-  cat("ru bounding box: ", "\n")
-  print(object$box, ...)
+  cat("sample summary", "\n")
+  print(summary(object$sim_vals, ...), ...)
 }
 

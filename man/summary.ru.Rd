@@ -7,8 +7,7 @@
 \method{summary}{ru}(object, ...)
 }
 \arguments{
-\item{object}{an object of class "ru", a result of a call to
-\code{ru}.}
+\item{object}{an object of class "ru", a result of a call to \code{ru}.}
 
 \item{...}{Additional arguments passed on to \code{print} or \code{summary}.}
 }

@@ -38,5 +38,6 @@
 #'
 #' @docType package
 #' @name rust
+#' @import methods
 #' @importFrom stats runif
 NULL

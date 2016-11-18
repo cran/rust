@@ -144,14 +144,19 @@ find_lambda_one_d <- function(logf, ..., ep_bc = 1e-4, min_phi = ep_bc,
     phi_to_theta <- identity
     log_j <- function(x) 0
   }
-  # Define a function fun() returning the density f (up to proportionality)
-  fun <- function(x, ...) {
-    exp(logf(phi_to_theta(x), ...) - log_j(x))
+  # Define a function log_fun() returning the log-density logf
+  # (up to an additive constant).
+  log_fun <- function(x, ...) {
+    logf(phi_to_theta(x), ...) - log_j(x)
   }
   # Set num equally-spaced values of x in [min_phi, max_phi]
   x <- seq(min_phi, max_phi, len = num)
   # Calculate the density (weights) at these values
-  w <- fun(x, ...)
+  log_w <- log_fun(x, ...)
+  # Shift log_w so that it has a maximum of 0, to try to avoid underflow.
+  log_w <- log_w - max(log_w, na.rm = TRUE)
+  # Evaluate the density values.
+  w <- exp(log_w)
   # Standardise, so that the weights sum to 1
   w <- w / sum(w)
   n <- length(w)
@@ -168,7 +173,9 @@ find_lambda_one_d <- function(logf, ..., ep_bc = 1e-4, min_phi = ep_bc,
   # Reset the xs over this new range
   x <- seq(r[1], r[2], len = num)
   # Recalculate the weights and the areas and midpoints
-  w <- fun(x, ...)
+  log_w <- log_fun(x, ...)
+  log_w <- log_w - max(log_w, na.rm = TRUE)
+  w <- exp(log_w)
   w <- w / sum(w)
   n <- length(w)
   wbar <- (w[1:(n-1)] + w[2:n]) / 2
@@ -221,6 +228,9 @@ find_lambda_one_d <- function(logf, ..., ep_bc = 1e-4, min_phi = ep_bc,
 #'   of phi that ARE to be Box-Cox transformed.
 #' @param lambda_range A numeric vector of length 2.  Range of lambda over
 #'   which to optimise.
+#' @param init_lambda A numeric vector of length 1 or d.  Initial value of
+#'   lambda used in the search for the best lambda.  If \code{init_lambda}
+#'   is a scalar then \code{rep(init_lambda, d)} is used.
 #' @param phi_to_theta A function returning (inverse) of the transformation
 #'   from theta to phi used to ensure positivity of phi prior to Box-Cox
 #'   transformation.  The argument is phi and the returned value is theta.
@@ -354,8 +364,20 @@ find_lambda_one_d <- function(logf, ..., ep_bc = 1e-4, min_phi = ep_bc,
 find_lambda <- function(logf, ..., d = 1, n_grid = NULL, ep_bc = 1e-4,
                         min_phi = rep(ep_bc, d), max_phi = rep(10, d),
                         which_lam = 1:d, lambda_range = c(-3,3),
-                        phi_to_theta = NULL, log_j = NULL) {
+                        init_lambda = NULL, phi_to_theta = NULL,
+                        log_j = NULL) {
   #
+  if (!is.null(init_lambda)) {
+    if (!is.vector(init_lambda)) {
+      stop("init_lambda must be a vector.")
+    }
+    if (length(init_lambda) == 1) {
+      init_lambda <- rep(init_lambda, d)
+    }
+    if (length(init_lambda) != d) {
+      stop("init_lambda must be a vector of length 1 or d.")
+    }
+  }
   # Check that max_phi > min_phi in all cases
   if (any(max_phi-min_phi <= 0)) {
     stop("max_phi must be larger than min_phi elementwise.")
@@ -377,12 +399,13 @@ find_lambda <- function(logf, ..., d = 1, n_grid = NULL, ep_bc = 1e-4,
     phi_to_theta <- identity
     log_j <- function(x) 0
   }
-  # Define a function fun() returning the density f (up to proportionality)
-  fun <- function(x, ...) {
-    exp(logf(phi_to_theta(x), ...) - log_j(x))
+  # Define a function log_fun() returning the log-density logf
+  # (up to an additive constant).
+  log_fun <- function(x, ...) {
+    logf(phi_to_theta(x), ...) - log_j(x)
   }
-  # Evaluate the target density (up to a constant) over a grid of values that
-  # contains most of the probability.
+  # Evaluate the target density (up to a multiplicative constant) over a
+  # grid of values that contains most of the probability.
   #
   # If n_grid has not been specified then set a default value
   if (is.null(n_grid)) {
@@ -395,11 +418,15 @@ find_lambda <- function(logf, ..., d = 1, n_grid = NULL, ep_bc = 1e-4,
   phi <- mapply(seq, from = low_phi, to = up_phi, len=n_grid)
   # Make this matrix into a list with an entry for each column
   phi <- lapply(seq_len(ncol(phi)), function(i) phi[, i])
-  # Expand into a matrix containing the grid of combinations (one combination in each row)
+  # Expand into a matrix containing the grid of combinations (one
+  # combination in each row).
   phi <- expand.grid(phi)
-  print(dim(phi))
-  # Evaluate the target density at each combination in the grid
-  w <- apply(phi, 1, fun, ...)
+  # Evaluate the target log-density at each combination in the grid.
+  log_w <- apply(phi, 1, log_fun, ...)
+  # Shift log_w so that it has a maximum of 0, to try to avoid underflow.
+  log_w <- log_w - max(log_w, na.rm = TRUE)
+  # Evaluate the density values.
+  w <- exp(log_w)
   #
   # Seek marginal Box-Cox transformations such that the joint posterior is
   # closer to being bivariate normal
@@ -408,7 +435,7 @@ find_lambda <- function(logf, ..., d = 1, n_grid = NULL, ep_bc = 1e-4,
     stop("Attempt to use Box-Cox transformation on non-positive value(s).")
   }
   res_bc <- optim_box_cox(x = phi, w = w, which_lam = which_lam,
-                          lambda_range = lambda_range)
+                          lambda_range = lambda_range, start = init_lambda)
   lambda <- res_bc$lambda
   gm <- res_bc$gm
   phi_to_psi <- function(phi)  {
@@ -446,7 +473,7 @@ box_cox <- function (x, lambda = 1, gm = 1, lambda_tol = 1e-6) {
     retval <- (x ^ lambda - 1) / lambda / gm ^ (lambda - 1)
   } else {
     i <- 0:3
-    retval <- sum(log(x) ^ (i+1) * lambda ^ i / factorial(i + 1))
+    retval <- sum(log(x) ^ (i + 1) * lambda ^ i / factorial(i + 1))
     retval <- retval / gm ^ (lambda - 1)
   }
   retval
@@ -460,7 +487,7 @@ box_cox_vec <- Vectorize(box_cox, vectorize.args = c("lambda", "gm"))
 
 # =========================== optim_box_cox ===========================
 
-optim_box_cox <- function(x, w, start = NULL, lambda_range = c(-3,3),
+optim_box_cox <- function(x, w, lambda_range = c(-3,3), start = NULL,
                           which_lam = 1:ncol(x)) {
   #
   # Finds the optimal value of the Box-Cox transformation parameter lambda,
@@ -472,9 +499,9 @@ optim_box_cox <- function(x, w, start = NULL, lambda_range = c(-3,3),
   #                  column numbers in which_lam must contain positive values.
   #   w            : A numeric vector. Density values corresponding to each
   #                  row of x (up to proportionality).
-  #   start        : A numeric vector.  Optional starting value for lambda.
   #   lambda_range : A numeric vector (of length 2).  Range of lambda values
   #                  over which to search.
+  #   start        : A numeric vector.  Optional starting value for lambda.
   #   which_lam    : A numeric vector.  Indicates which variables to Box-Cox
   #                  transform.
   #

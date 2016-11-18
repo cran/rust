@@ -7,7 +7,7 @@
 #' \code{logf} must be bounded, perhaps after a transformation of variable.
 #'
 #' @param logf A function returning the log of the target density f.
-#' @param ... further arguments to be passed to \code{logf} and related
+#' @param ... Further arguments to be passed to \code{logf} and related
 #'   functions.
 #' @param n A numeric scalar.  Number of simulated values required.
 #' @param d A numeric scalar. Dimension of f.
@@ -54,7 +54,7 @@
 #' @param gm A numeric vector. Box-cox scaling parameters (optional). If
 #'   \code{lambda$gm} is supplied in input list \code{lambda} then
 #'   \code{lambda$gm} is used, not \code{gm}.
-#' @param rotate A logical scalar. If TRUE (\code{d} > 1 only) use Cholesky
+#' @param rotate A logical scalar. If TRUE (\code{d} > 1 only) use Choleski
 #'   rotation.  If d = 1 and \code{rotate} = TRUE then rotate will be set to
 #'   FALSE with a warning.
 #' @param lower,upper Numeric vectors.  Lower/upper bounds on the arguments of
@@ -112,7 +112,6 @@
 #'   with a warning.  A warning is also given if this happens when
 #'   \code{d} = 1.
 #'
-#'
 #'   The default value of the tuning parameter \code{r} is 1/2, which is
 #'   likely to be close to optimal in many cases, particularly if
 #'   \code{trans = "BC"}.
@@ -139,8 +138,14 @@
 #'       acceptance.}
 #'     \item{d}{A numeric scalar.  The dimension of \code{logf}.}
 #'     \item{logf}{A function. \code{logf} function supplied by the user.}
+#'     \item{logf_rho}{A function. The target function actually used in the
+#'       ratio-of-uniforms algorithm.}
+#'     \item{sim_vals_rho}{An \code{n} by \code{d} matrix of values simulated
+#'       from the function used in the ratio-of-uniforms algorithm.}
 #'     \item{logf_args}{A list of further arguments to \code{logf}.}
-#'     \item{f_mode}{The estimated mode of the target density f.}
+#'     \item{f_mode}{The estimated mode of the target density f, after any
+#'       Box-Cox transformation and/or user supplied transformation, but before
+#'       mode relocation.}
 #' @references Wakefield, J. C., Gelfand, A. E. and Smith, A. F. M. (1991)
 #'  Efficient generation of random variates via the ratio-of-uniforms method.
 #'  Statistics and Computing (1991) 1, 129-133.
@@ -293,7 +298,6 @@ ru <- function(logf, ..., n = 1, d = 1, init = NULL,
                             "Brent"),
                a_control = list(), b_control = list(), var_names = NULL) {
   #
-  print(a_algor)
   # Check that the values of key arguments are suitable
   if (r < 0) {
     stop("r must be non-negative")
@@ -325,7 +329,7 @@ ru <- function(logf, ..., n = 1, d = 1, init = NULL,
       if (!is.null(lambda$gm)) {
         gm <- lambda$gm
       }
-      if (!is.null(lambda$init)) {
+      if (!is.null(lambda$init_psi)) {
         init <- lambda$init_psi
       }
       if (a_algor == "optim" & is.null(a_control$parscale)) {
@@ -467,7 +471,7 @@ ru <- function(logf, ..., n = 1, d = 1, init = NULL,
     const <- lambda * gm ^ (lambda - 1)
     if (any(lambda == 0L)) {
       psi_to_phi <- function(psi) {
-        ifelse(lambda == 0, exp(gm * psi), (psi * const + 1) ^ (1 / lambda))
+        ifelse(lambda == 0, exp(psi / gm), (psi * const + 1) ^ (1 / lambda))
       }
     } else {
       psi_to_phi <- function(psi) (psi * const + 1) ^ (1 / lambda)
@@ -614,6 +618,7 @@ ru <- function(logf, ..., n = 1, d = 1, init = NULL,
   res$sim_vals <- matrix(NA, ncol = d, nrow = n)
   res$sim_vals_rho <- matrix(NA, ncol = d, nrow = n)
   colnames(res$sim_vals) <- var_names
+  colnames(res$sim_vals_rho) <- paste("rho[", 1:d, "]", sep="")
   #
   d_box <- u_box - l_box
   d_r <- d * r + 1

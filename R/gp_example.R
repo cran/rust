@@ -119,18 +119,18 @@ rgpd <- function (m = 1, sigma = 1, xi = 0) {
 #' @param init_ests A numeric vector.  Initial estimate of
 #'   theta = (sigma, xi).  If supplied \code{gpd_init()} just
 #'   returns the corresponding initial estimate of phi = (phi1, phi2).
-#' @details The main aim is to calculate an admissible estimate of theta at,
+#' @details The main aim is to calculate an admissible estimate of theta,
 #'   i.e. one at which the log-likelihood is finite (necessary for the
 #'   posterior log-density to be finite) at the estimate, and associated
 #'   estimated SEs. These are converted into estimates and SEs for phi.  The
 #'   latter can be used to set values of \code{min_phi} and \code{max_phi}
-#'   for input to \code{find_lambda} and \code{find_lambda_one_d}.
+#'   for input to \code{find_lambda}.
 #'
 #'   In the default setting (\code{xi_eq_zero = FALSE} and
 #'   \code{init_ests = NULL}) the methods tried are Maximum Likelihood
 #'   Estimation (MLE) (Grimshaw, 1993), Probability-Weighted Moments (PWM)
 #'   (Hosking and Wallis, 1987) and Linear Combinations of Ratios of Spacings
-#'   (LRS) (Riess and Thomas, 2007, page 134) in that order.
+#'   (LRS) (Reiss and Thomas, 2007, page 134) in that order.
 #'
 #'   For xi < -1 the likelihood is unbounded, MLE may fail when xi is not
 #'   greater than -0.5 and the observed Fisher information for (sigma, xi) has
@@ -169,12 +169,8 @@ rgpd <- function (m = 1, sigma = 1, xi = 0) {
 #' @seealso \code{\link{gpd_sum_stats}} to calculate summary statistics for
 #'   use in \code{gpd_loglik}.
 #' @seealso \code{\link{rgpd}} for simulation from a generalized Pareto
-#' @seealso \code{\link{find_lambda_one_d}} to produce (somewhat) automatically
-#'   a list for the argument \code{lambda} of \code{ru} for the
-#'   \code{d} = 1 case.
 #' @seealso \code{\link{find_lambda}} to produce (somewhat) automatically
-#'   a list for the argument \code{lambda} of \code{ru} for any value of
-#'   \code{d}.
+#'   a list for the argument \code{lambda} of \code{ru}.
 #' @examples
 #' \dontrun{
 #' # Sample data from a GP(sigma, xi) distribution
@@ -231,7 +227,7 @@ gpd_init <- function(gpd_data, m, xm, sum_gp = NULL, xi_eq_zero = FALSE,
     mat <- matrix(c(1, 0, 1 / xm, 1), 2, 2, byrow = TRUE)
     var_phi <- mat %*% pwm$cov %*% t(mat)
     se_phi <- sqrt(diag(var_phi))
-    # Note: se and se_phi will be NA if pwm$est > 1/2
+    # Note: se and se_phi will be NA if pwm$est[2] > 1/2
     check <- gpd_loglik(pars = pwm$est, gpd_data = gpd_data, m = m, xm = xm,
                        sum_gp = sum_gp)
     # If MLE wasn't OK and PWM estimate is OK then use PWM estimate
