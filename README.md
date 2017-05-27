@@ -1,7 +1,12 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
-rust: ratio-of-uniforms simulation with transformation
-------------------------------------------------------
+rust <img src="tools/rust_logo.png" align="right" />
+====================================================
+
+[![Travis-CI Build Status](https://travis-ci.org/paulnorthrop/rust.svg?branch=master)](https://travis-ci.org/paulnorthrop/rust)
+
+ratio-of-uniforms simulation with transformation
+------------------------------------------------
 
 ### What does rust do?
 
@@ -9,7 +14,7 @@ The `rust` package implements the multivariate generalized ratio-of-uniforms met
 
 ### A simple example
 
-we use the main function `ru` is used to simulate a sample of size 1000 from a two-dimensional standard normal distribution with strong positive correlation between the components. Of course, this particular example is purely illustrative: there are better ways to simulate from a multivariate normal distribution.
+We use the function `ru` to simulate a sample of size 1000 from a two-dimensional standard normal distribution with strong positive correlation between the components. Of course, this particular example is purely illustrative: there are better ways to simulate from a multivariate normal distribution.
 
 ``` r
 rho <- 0.9
@@ -22,6 +27,15 @@ log_dmvnorm <- function(x, mean = rep(0, d), sigma = diag(d)) {
 x <- ru(logf = log_dmvnorm, sigma = covmat, d = 2, n = 1000, init = c(0, 0))
 ```
 
+From version 1.2.0 onwards the faster function `ru_rcpp` can be used. See the vignette "Rusting Faster: Simulation using Rcpp" for details.
+
+``` r
+# Create an external pointer to a C++ function to evaluate the log-density.
+ptr_bvn <- create_xptr("logdnorm2")
+# Pass the external pointer to `ru_rcpp`.
+x <- ru_rcpp(logf = ptr_bvn, rho = rho, d = 2, n = 1000, init = c(0, 0))
+```
+
 ### Installation
 
 To get the current released version from CRAN:
@@ -32,4 +46,4 @@ install.packages("rust")
 
 ### Vignette
 
-See `vignette("rust-vignette", package = "rust")` for an overview of the package.
+See `vignette("rust-vignette", package = "rust")` for an overview of the package and `vignette("rust-using-rcpp-vignette", package = "rust")` for information on how to take advantage of the Rcpp package.

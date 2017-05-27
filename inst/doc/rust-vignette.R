@@ -9,7 +9,7 @@ colnames(pa) <- d
 knitr::kable(round(pa,3), caption = "$p_a(d, 1/2)$ as $d$ varies.")
 
 ## ----setup, include=FALSE------------------------------------------------
-devtools::load_all() # reload all code (after saving them)   or Ctrl-shift-L
+devtools::load_all()
 
 ## ------------------------------------------------------------------------
 library(rust)
@@ -189,4 +189,8 @@ x3 <- ru(logf = log_dmvnorm, sigma = covmat, d = 3, n = n,
 x4 <- ru(logf = log_dmvnorm, sigma = covmat, d = 3, n = n,
   init = c(0, 0, 0))
 c(x3$pa, x4$pa)
+
+## ---- fig.width = 7------------------------------------------------------
+plot(x3, ru_scale = TRUE)
+plot(x4, ru_scale = TRUE)
 
