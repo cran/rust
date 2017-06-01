@@ -12,7 +12,7 @@
 
 <meta name="author" content="Paul Northrop" />
 
-<meta name="date" content="2017-05-26" />
+<meta name="date" content="2017-05-31" />
 
 <title>Rusting Faster: Simulation using Rcpp</title>
 
@@ -70,7 +70,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <h1 class="title toc-ignore">Rusting Faster: Simulation using Rcpp</h1>
 <h4 class="author"><em>Paul Northrop</em></h4>
-<h4 class="date"><em>2017-05-26</em></h4>
+<h4 class="date"><em>2017-05-31</em></h4>
 
 
 <div id="TOC">
@@ -82,9 +82,9 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <li><a href="#log-normal-density-after-box-cox-transformation">Log-normal density after Box-Cox transformation</a></li>
 <li><a href="#generalized-pareto-posterior-density">Generalized Pareto posterior density</a></li>
 </ul></li>
-<li><a href="#examples-find_lambda_rcpp_one_d-and-find_lambda_rcpp">Examples : <code>find_lambda_rcpp_one_d</code> and <code>find_lambda_rcpp</code></a><ul>
-<li><a href="#gamma-density-example-for-find_lambda_one_d">Gamma density: example for <code>find_lambda_one_d</code></a></li>
-<li><a href="#generalized-pareto-posterior-density-example-for-find_lambda">Generalized Pareto posterior density: example for <code>find_lambda</code></a></li>
+<li><a href="#examples-find_lambda_one_d_rcpp-and-find_lambda_rcpp">Examples : <code>find_lambda_one_d_rcpp</code> and <code>find_lambda_rcpp</code></a><ul>
+<li><a href="#gamma-density-example-for-find_lambda_one_d_rcpp">Gamma density: example for <code>find_lambda_one_d_rcpp</code></a></li>
+<li><a href="#generalized-pareto-posterior-density-example-for-find_lambda_rcpp">Generalized Pareto posterior density: example for <code>find_lambda_rcpp</code></a></li>
 </ul></li>
 <li><a href="#references">References</a></li>
 </ul>
@@ -97,10 +97,10 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <h2>Providing a C++ function to <code>ru_rcpp</code></h2>
 <p>The general way that <strong>rust</strong> enables users to provide their own C++ functions uses external pointers and is based on the <a href="http://gallery.rcpp.org/">Rcpp Gallery</a> article <a href="http://gallery.rcpp.org/articles/passing-cpp-function-pointers/">Passing user-supplied C++ functions</a> by Dirk Eddelbuettel. For a detailed case study of the general approach see the <strong>RcppDE</strong> package <span class="citation">(Eddelbuettel 2016)</span> vignette at the <a href="https://CRAN.R-project.org/package=RcppDE">RcppDE page on CRAN</a>.</p>
 <p>The user writes a C++ function to calculate <span class="math inline">\(\log f(x)\)</span>. The current implementation in <strong>rust</strong> requires this function to have a particular structure: it must take a constant reference to an <code>Rcpp::NumericVector</code>, say <code>x</code>, a constant reference to an <code>Rcpp::List</code>, say <code>pars</code>, and return a <code>double</code> precision scalar. <code>x</code> is the argument <span class="math inline">\(x\)</span> of <span class="math inline">\(f(x)\)</span>. <code>pars</code> is a list containing the values of parameters whose values are not specified inside the function. This allows the user to change the values of any parameters in the target density without editing the function. If there are no such parameters then the user must still include the argument <code>pars</code> in their function, even though the list provided to the function when it is called will be empty.</p>
-<p>A simple way for the user to provide their C++ functions to create them in a file, say <code>user_fns.cpp</code>. Content from an example of this file, <code>example_user_fns.cpp</code>, is provided below. The full file is available on the <a href="https://github.com/paulnorthrop/rust/blob/master/vignettes/example_user_fns.cpp">rust Github page</a>. The functions in this file are compiled and made available to R, either using the <code>Rcpp::sourceCpp</code> function (e.g. <code>Rcpp::sourceCpp(&quot;user_fns.cpp&quot;)</code>) or using RStudio’s Source button on the editor toolbar. The example content below also includes the function <code>create_xptr</code>, which creates an external pointer to a C++ function. See . It is this external pointer that is passed to <code>ru_rcpp</code> to perform ratio-of-uniforms sampling. If the user has written a C++ function, say <code>new_name</code>, they need to add to <code>create_xptr</code> two lines of code:</p>
+<p>A simple way for the user to provide their C++ functions to create them in a file, say <code>user_fns.cpp</code>. Example content is provided below. The full file is available on the <a href="https://github.com/paulnorthrop/rust/blob/master/src/user_fns.cpp">rust Github page</a>. The functions in this file are compiled and made available to R, either using the <code>Rcpp::sourceCpp</code> function (e.g. <code>Rcpp::sourceCpp(&quot;user_fns.cpp&quot;)</code>) or using RStudio’s Source button on the editor toolbar. The example content below also includes the function <code>create_xptr</code>, which creates an external pointer to a C++ function. See . It is this external pointer that is passed to <code>ru_rcpp</code> to perform ratio-of-uniforms sampling. If the user has written a C++ function, say <code>new_name</code>, they need to add to <code>create_xptr</code> two lines of code:</p>
 <pre><code>else if (fstr == &quot;new_name&quot;)  
   return(Rcpp::XPtr&lt;funcPtr&gt;(new funcPtr(&amp;new_name))) ;</code></pre>
-<p>in order that they can create an external pointer for <code>new_name</code> using <code>create_xptr</code>. The following example file <code>example_user_fns.cpp</code> contains code for a standard normal density. Note that for this particular example we don’t need RcppArmadillo: we could replace <code>#include &lt;RcppArmadillo.h&gt;</code> with <code>#include &lt;Rcpp.h&gt;</code> and delete <code>using namespace arma;</code>. However, RcppArmadillo is used in the the <a href="#mvn">multivariate normal example</a> below and will be useful in many examples.</p>
+<p>in order that they can create an external pointer for <code>new_name</code> using <code>create_xptr</code>. The following excerpt from the example <code>user_fns.cpp</code> file contains code for a standard normal density. Note that for this particular example we don’t need RcppArmadillo: we could replace <code>#include &lt;RcppArmadillo.h&gt;</code> with <code>#include &lt;Rcpp.h&gt;</code> and delete <code>using namespace arma;</code>. However, RcppArmadillo is used in the the <a href="#mvn">multivariate normal example</a> below and will be useful in many examples.</p>
 <pre><code>// [[Rcpp::depends(RcppArmadillo)]]
 
 #include &lt;RcppArmadillo.h&gt;
@@ -156,14 +156,15 @@ ptr_N01 &lt;- create_xptr(&quot;logdN01&quot;)
 <p>All the examples in the documentation for <code>ru</code> are replicated in the documentation for <code>ru_rcpp</code>. Here we consider a subset of the examples from the <a href="rust-vignette.html">Introducing rust</a> vignette, to illustrate how to provide user-supplied C++ functions to <code>ru_rcpp</code> and to compare the performances of <code>ru</code> and <code>ru_rcpp</code>.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(rust)
 <span class="kw">library</span>(Rcpp)
-<span class="kw">library</span>(microbenchmark)
+mb_available &lt;-<span class="st"> </span><span class="kw">require</span>(<span class="st">&quot;microbenchmark&quot;</span>)
+<span class="co">#&gt; Loading required package: microbenchmark</span>
+if (mb_available) <span class="kw">library</span>(microbenchmark)
 <span class="co"># Set the size of the simulated sample</span>
 n &lt;-<span class="st"> </span><span class="dv">1000</span></code></pre></div>
 <p>It is assumed that the user has already compiled their C++ functions and made them available to their R session, either using the <code>Rcpp::sourceCpp</code> function (e.g. <code>Rcpp::sourceCpp(&quot;user_fns.cpp&quot;)</code>) or using RStudio’s Source button on the editor toolbar.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">Rcpp::<span class="kw">sourceCpp</span>(<span class="st">'example_user_fns.cpp'</span>)</code></pre></div>
 <div id="standard-normal-density" class="section level3">
 <h3>Standard normal density</h3>
-<p>We start with a simple example: the (1-dimensional) standard normal density, based on the C++ function <code>logdN01</code> in the example <code>example_user_fns.cpp</code> file above.</p>
+<p>We start with a simple example: the (1-dimensional) standard normal density, based on the C++ function <code>logdN01</code> in the example <code>user_fns.cpp</code> file above.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Normal density ===================</span>
 
 <span class="co"># Create a pointer to the logdN01 C++ function</span>
@@ -194,20 +195,22 @@ x_new &lt;-<span class="st"> </span><span class="kw">ru_rcpp</span>(<span class=
 <span class="co">#&gt; [6,]  0.5180914</span>
 
 <span class="co"># Compare performances of ru and ru_rcpp</span>
-res &lt;-<span class="st"> </span><span class="kw">microbenchmark</span>(
- <span class="dt">old =</span> <span class="kw">ru</span>(<span class="dt">logf =</span> function(x) -x ^<span class="st"> </span><span class="dv">2</span> /<span class="st"> </span><span class="dv">2</span>, <span class="dt">d =</span> <span class="dv">1</span>, <span class="dt">n =</span> n, <span class="dt">init =</span> <span class="fl">0.1</span>),
- <span class="dt">new =</span> <span class="kw">ru_rcpp</span>(<span class="dt">logf =</span> ptr_N01, <span class="dt">d =</span> <span class="dv">1</span>, <span class="dt">n =</span> n, <span class="dt">init =</span> <span class="fl">0.1</span>)
-)
-<span class="kw">print</span>(res, <span class="dt">signif =</span> <span class="dv">4</span>)
+if (mb_available) {
+  res &lt;-<span class="st"> </span><span class="kw">microbenchmark</span>(
+    <span class="dt">old =</span> <span class="kw">ru</span>(<span class="dt">logf =</span> function(x) -x ^<span class="st"> </span><span class="dv">2</span> /<span class="st"> </span><span class="dv">2</span>, <span class="dt">d =</span> <span class="dv">1</span>, <span class="dt">n =</span> n, <span class="dt">init =</span> <span class="fl">0.1</span>),
+    <span class="dt">new =</span> <span class="kw">ru_rcpp</span>(<span class="dt">logf =</span> ptr_N01, <span class="dt">d =</span> <span class="dv">1</span>, <span class="dt">n =</span> n, <span class="dt">init =</span> <span class="fl">0.1</span>)
+  )
+  <span class="kw">print</span>(res, <span class="dt">signif =</span> <span class="dv">4</span>)
+}
 <span class="co">#&gt; Unit: milliseconds</span>
 <span class="co">#&gt;  expr    min     lq      mean median     uq     max neval</span>
-<span class="co">#&gt;   old 31.990 33.470 37.498158  34.09 38.110 174.900   100</span>
-<span class="co">#&gt;   new  2.442  2.576  2.740526   2.70  2.763   7.146   100</span></code></pre></div>
+<span class="co">#&gt;   old 33.100 37.310 39.333289  37.80 38.470 104.100   100</span>
+<span class="co">#&gt;   new  2.261  2.364  2.570993   2.48  2.574   6.571   100</span></code></pre></div>
 <p>As we would hope, <code>ru_rcpp</code> is faster than <code>ru</code>. If we start from the same random number seed we get the same simulated values from <code>ru</code> and <code>ru_rcpp</code>.</p>
 </div>
 <div id="mvn" class="section level3">
 <h3>Multivariate normal density</h3>
-<p>To execute this example we add the following function to <code>example_user_fns.cpp</code></p>
+<p>To execute this example we add the following function to <code>user_fns.cpp</code></p>
 <pre><code>// d-dimensional normal with zero-mean and covariance matrix sigma.
 
 // [[Rcpp::export]]
@@ -220,7 +223,7 @@ double logdmvnorm(const Rcpp::NumericVector&amp; x, const Rcpp::List&amp; pars) 
 <p>and add</p>
 <pre><code>else if (fstr == &quot;logdmvnorm&quot;)
   return(Rcpp::XPtr&lt;funcPtr&gt;(new funcPtr(&amp;logdmvnorm))) ;</code></pre>
-<p>to the function <code>create_xptr</code> in <code>example_user_fns.cpp</code>.</p>
+<p>to the function <code>create_xptr</code> in <code>user_fns.cpp</code>.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Three-dimensional normal with positive association ----------------</span>
 rho &lt;-<span class="st"> </span><span class="fl">0.9</span>
 covmat &lt;-<span class="st"> </span><span class="kw">matrix</span>(rho, <span class="dv">3</span>, <span class="dv">3</span>) +<span class="st"> </span><span class="kw">diag</span>(<span class="dv">1</span> -<span class="st"> </span>rho, <span class="dv">3</span>)
@@ -233,17 +236,19 @@ log_dmvnorm &lt;-<span class="st"> </span>function(x, <span class="dt">mean =</s
 <span class="co"># Create a pointer to the logdmvnorm C++ function</span>
 ptr_mvn &lt;-<span class="st"> </span><span class="kw">create_xptr</span>(<span class="st">&quot;logdmvnorm&quot;</span>)
 
-res &lt;-<span class="st"> </span><span class="kw">microbenchmark</span>(
-  <span class="dt">old =</span> <span class="kw">ru</span>(<span class="dt">logf =</span> log_dmvnorm, <span class="dt">sigma =</span> covmat, <span class="dt">d =</span> <span class="dv">3</span>, <span class="dt">n =</span> n,
-           <span class="dt">init =</span> <span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>)), 
-  <span class="dt">new =</span> <span class="kw">ru_rcpp</span>(<span class="dt">logf =</span> ptr_mvn, <span class="dt">sigma =</span> covmat, <span class="dt">d =</span> <span class="dv">3</span>, <span class="dt">n =</span> n,
-                <span class="dt">init =</span> <span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>))
-)  
-<span class="kw">print</span>(res, <span class="dt">signif =</span> <span class="dv">4</span>)
+if (mb_available) {
+  res &lt;-<span class="st"> </span><span class="kw">microbenchmark</span>(
+    <span class="dt">old =</span> <span class="kw">ru</span>(<span class="dt">logf =</span> log_dmvnorm, <span class="dt">sigma =</span> covmat, <span class="dt">d =</span> <span class="dv">3</span>, <span class="dt">n =</span> n,
+             <span class="dt">init =</span> <span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>)), 
+    <span class="dt">new =</span> <span class="kw">ru_rcpp</span>(<span class="dt">logf =</span> ptr_mvn, <span class="dt">sigma =</span> covmat, <span class="dt">d =</span> <span class="dv">3</span>, <span class="dt">n =</span> n,
+                  <span class="dt">init =</span> <span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>))
+  )  
+  <span class="kw">print</span>(res, <span class="dt">signif =</span> <span class="dv">4</span>)
+}  
 <span class="co">#&gt; Unit: milliseconds</span>
-<span class="co">#&gt;  expr     min      lq       mean  median     uq    max neval</span>
-<span class="co">#&gt;   old 230.000 245.800 261.369274 253.200 264.50 403.20   100</span>
-<span class="co">#&gt;   new   8.987   9.395   9.944666   9.615  10.13  15.41   100</span></code></pre></div>
+<span class="co">#&gt;  expr     min    lq      mean  median    uq    max neval</span>
+<span class="co">#&gt;   old 235.900 248.9 263.82268 252.800 256.6 526.40   100</span>
+<span class="co">#&gt;   new   8.558   8.9  10.35452   9.234  12.5  18.77   100</span></code></pre></div>
 <p>Again, the improvement in speed obtained using Rcpp is clear.</p>
 </div>
 <div id="log-normal-density-after-box-cox-transformation" class="section level3">
@@ -261,17 +266,19 @@ double logdlnorm(const Rcpp::NumericVector&amp; x, const Rcpp::List&amp; pars) {
     return R_NegInf ;
 }</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">ptr_lnorm &lt;-<span class="st"> </span><span class="kw">create_xptr</span>(<span class="st">&quot;logdlnorm&quot;</span>)
-res &lt;-<span class="st"> </span><span class="kw">microbenchmark</span>(
- <span class="dt">old =</span> <span class="kw">ru</span>(<span class="dt">logf =</span> dlnorm, <span class="dt">log =</span> <span class="ot">TRUE</span>, <span class="dt">d =</span> <span class="dv">1</span>, <span class="dt">n =</span> n, <span class="dt">lower =</span> <span class="dv">0</span>, <span class="dt">init =</span> <span class="fl">0.1</span>,
-          <span class="dt">trans =</span> <span class="st">&quot;BC&quot;</span>, <span class="dt">lambda =</span> <span class="dv">0</span>),
- <span class="dt">new =</span> <span class="kw">ru_rcpp</span>(<span class="dt">logf =</span> ptr_lnorm, <span class="dt">mu =</span> <span class="dv">0</span>, <span class="dt">sigma =</span> <span class="dv">1</span>, <span class="dt">d =</span> <span class="dv">1</span>, <span class="dt">n =</span> n,
-               <span class="dt">lower =</span> <span class="dv">0</span>, <span class="dt">init =</span> <span class="fl">0.1</span>, <span class="dt">trans =</span> <span class="st">&quot;BC&quot;</span>, <span class="dt">lambda =</span> <span class="dv">0</span>)
-)
-<span class="kw">print</span>(res, <span class="dt">signif =</span> <span class="dv">4</span>)
+if (mb_available) {
+  res &lt;-<span class="st"> </span><span class="kw">microbenchmark</span>(
+   <span class="dt">old =</span> <span class="kw">ru</span>(<span class="dt">logf =</span> dlnorm, <span class="dt">log =</span> <span class="ot">TRUE</span>, <span class="dt">d =</span> <span class="dv">1</span>, <span class="dt">n =</span> n, <span class="dt">lower =</span> <span class="dv">0</span>, <span class="dt">init =</span> <span class="fl">0.1</span>,
+            <span class="dt">trans =</span> <span class="st">&quot;BC&quot;</span>, <span class="dt">lambda =</span> <span class="dv">0</span>),
+   <span class="dt">new =</span> <span class="kw">ru_rcpp</span>(<span class="dt">logf =</span> ptr_lnorm, <span class="dt">mu =</span> <span class="dv">0</span>, <span class="dt">sigma =</span> <span class="dv">1</span>, <span class="dt">d =</span> <span class="dv">1</span>, <span class="dt">n =</span> n,
+                 <span class="dt">lower =</span> <span class="dv">0</span>, <span class="dt">init =</span> <span class="fl">0.1</span>, <span class="dt">trans =</span> <span class="st">&quot;BC&quot;</span>, <span class="dt">lambda =</span> <span class="dv">0</span>)
+  )
+  <span class="kw">print</span>(res, <span class="dt">signif =</span> <span class="dv">4</span>)
+}  
 <span class="co">#&gt; Unit: milliseconds</span>
-<span class="co">#&gt;  expr    min     lq      mean median     uq   max neval</span>
-<span class="co">#&gt;   old 48.490 56.360 59.290428 58.060 61.430 72.30   100</span>
-<span class="co">#&gt;   new  5.048  5.314  6.414968  5.473  5.715 74.53   100</span></code></pre></div>
+<span class="co">#&gt;  expr    min     lq     mean median    uq     max neval</span>
+<span class="co">#&gt;   old 50.530 54.630 57.32191 56.180 57.44 123.000   100</span>
+<span class="co">#&gt;   new  4.584  4.826  5.37415  5.009  5.21   9.608   100</span></code></pre></div>
 </div>
 <div id="generalized-pareto-posterior-density" class="section level3">
 <h3>Generalized Pareto posterior density</h3>
@@ -325,23 +332,25 @@ ptr_gp &lt;-<span class="st"> </span><span class="kw">create_xptr</span>(<span c
 for_ru_rcpp &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="kw">list</span>(<span class="dt">logf =</span> ptr_gp, <span class="dt">init =</span> init, <span class="dt">d =</span> <span class="dv">2</span>, <span class="dt">n =</span> n,
                  <span class="dt">lower =</span> <span class="kw">c</span>(<span class="dv">0</span>, -<span class="ot">Inf</span>)), ss)
 
-res &lt;-<span class="st"> </span><span class="kw">microbenchmark</span>(
- <span class="dt">old =</span> <span class="kw">ru</span>(<span class="dt">logf =</span> gpd_logpost, <span class="dt">ss =</span> ss, <span class="dt">d =</span> <span class="dv">2</span>, <span class="dt">n =</span> n, <span class="dt">init =</span> init,
-          <span class="dt">lower =</span> <span class="kw">c</span>(<span class="dv">0</span>, -<span class="ot">Inf</span>)),
- <span class="dt">new =</span> <span class="kw">do.call</span>(ru_rcpp, for_ru_rcpp)
-)
-<span class="kw">print</span>(res, <span class="dt">signif =</span> <span class="dv">4</span>)
+if (mb_available) {
+  res &lt;-<span class="st"> </span><span class="kw">microbenchmark</span>(
+   <span class="dt">old =</span> <span class="kw">ru</span>(<span class="dt">logf =</span> gpd_logpost, <span class="dt">ss =</span> ss, <span class="dt">d =</span> <span class="dv">2</span>, <span class="dt">n =</span> n, <span class="dt">init =</span> init,
+            <span class="dt">lower =</span> <span class="kw">c</span>(<span class="dv">0</span>, -<span class="ot">Inf</span>)),
+   <span class="dt">new =</span> <span class="kw">do.call</span>(ru_rcpp, for_ru_rcpp)
+  )
+  <span class="kw">print</span>(res, <span class="dt">signif =</span> <span class="dv">4</span>)
+}  
 <span class="co">#&gt; Unit: milliseconds</span>
-<span class="co">#&gt;  expr    min     lq      mean median     uq    max neval</span>
-<span class="co">#&gt;   old 145.30 152.60 160.47946 155.40 164.00 287.60   100</span>
-<span class="co">#&gt;   new  18.53  19.38  21.19399  19.83  22.47  29.62   100</span></code></pre></div>
+<span class="co">#&gt;  expr    min     lq      mean median     uq   max neval</span>
+<span class="co">#&gt;   old 149.00 158.10 170.81452 161.20 167.50 372.5   100</span>
+<span class="co">#&gt;   new  18.49  22.52  23.60078  23.14  23.79  46.5   100</span></code></pre></div>
 </div>
 </div>
-<div id="examples-find_lambda_rcpp_one_d-and-find_lambda_rcpp" class="section level2">
-<h2>Examples : <code>find_lambda_rcpp_one_d</code> and <code>find_lambda_rcpp</code></h2>
+<div id="examples-find_lambda_one_d_rcpp-and-find_lambda_rcpp" class="section level2">
+<h2>Examples : <code>find_lambda_one_d_rcpp</code> and <code>find_lambda_rcpp</code></h2>
 <p>We repeat two examples from the <a href="rust-vignette.html">Introducing rust</a> vignette.</p>
-<div id="gamma-density-example-for-find_lambda_one_d" class="section level3">
-<h3>Gamma density: example for <code>find_lambda_one_d</code></h3>
+<div id="gamma-density-example-for-find_lambda_one_d_rcpp" class="section level3">
+<h3>Gamma density: example for <code>find_lambda_one_d_rcpp</code></h3>
 <p>We make use of the <a href="http://dirk.eddelbuettel.com/code/rcpp/Rcpp-sugar.pdf">Rcpp sugar</a> function <code>dgamma</code>.</p>
 <pre><code>// Gamma(alpha, 1).
 
@@ -371,8 +380,8 @@ lambda
 <span class="co">#&gt; $user_args</span>
 <span class="co">#&gt; list()</span></code></pre></div>
 </div>
-<div id="generalized-pareto-posterior-density-example-for-find_lambda" class="section level3">
-<h3>Generalized Pareto posterior density: example for <code>find_lambda</code></h3>
+<div id="generalized-pareto-posterior-density-example-for-find_lambda_rcpp" class="section level3">
+<h3>Generalized Pareto posterior density: example for <code>find_lambda_rcpp</code></h3>
 <p>In this example we supply an external pointer to a C++ function <code>phi_to_theta</code> that ensures that both parameters of the model are strictly positive, a requirement for the Box-Cox transformation to be applicable. See the <a href="rust-vignette.html">Introducing rust</a> vignette for the form of transformation.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">temp &lt;-<span class="st"> </span><span class="kw">do.call</span>(gpd_init, ss)
 min_phi &lt;-<span class="st"> </span><span class="kw">pmax</span>(<span class="dv">0</span>, temp$init_phi -<span class="st"> </span><span class="dv">2</span> *<span class="st"> </span>temp$se_phi)
@@ -400,10 +409,10 @@ lambda
 <span class="co">#&gt; 0.12670792 0.02477219 </span>
 <span class="co">#&gt; </span>
 <span class="co">#&gt; $phi_to_theta</span>
-<span class="co">#&gt; &lt;pointer: 0x0000000011aa1900&gt;</span>
+<span class="co">#&gt; &lt;pointer: 0x0000000006fbe270&gt;</span>
 <span class="co">#&gt; </span>
 <span class="co">#&gt; $log_j</span>
-<span class="co">#&gt; &lt;pointer: 0x0000000011aa1970&gt;</span>
+<span class="co">#&gt; &lt;pointer: 0x0000000006fbe280&gt;</span>
 <span class="co">#&gt; </span>
 <span class="co">#&gt; $user_args</span>
 <span class="co">#&gt; $user_args$xm</span>
