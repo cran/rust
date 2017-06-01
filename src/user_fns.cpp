@@ -86,7 +86,7 @@ double loggp(const Rcpp::NumericVector& x, const Rcpp::List& ss) {
       for(int i = 1; i < 5; ++i) {
         t1 = pow(sdatj, i) ;
         t2 = (i * sdatj - i - 1) ;
-        total += pow(-1, i) * t1 * t2 * pow(x[1], i) / i / (i + 1) ;
+        total += pow(-1.0, i) * t1 * t2 * pow(x[1], i) / i / (i + 1) ;
       }
     }
     loglik = -m * log(x[0]) - sum_gp / x[0] - total ;
@@ -98,7 +98,7 @@ double loggp(const Rcpp::NumericVector& x, const Rcpp::List& ss) {
   return (logprior + loglik) ;
 }
 
-// A function to create external pointers to the functions to evalauet logf.
+// A function to create external pointers to the functions to evaluate logf.
 // See http://gallery.rcpp.org/articles/passing-cpp-function-pointers/
 // If you write a new function above called new_name then add something
 // like the following.

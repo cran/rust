@@ -1,6 +1,6 @@
-b489e5c6612e9dd0c595ad4db2d737a0 *DESCRIPTION
+2d6246e0e1d1070f7f8422b672c847f5 *DESCRIPTION
 9571160d1af6edcefbfc0a684a802a1c *NAMESPACE
-61d1e4dce750ab30a83682d71745b33d *NEWS.md
+1dfeec1b491ecad853ac0e6f77717896 *NEWS.md
 4458f02b0099d39183967d6a69e63314 *R/RcppExports.R
 daa3bbd7d7c28292f1f10c27c40a15a3 *R/box_cox_functions.R
 992edbf8c0b6da8ab290883f4f87666c *R/box_cox_functions_rcpp.R
@@ -40,11 +40,10 @@ a1e86627020c43852446a8e2c2141b3f *src/Makevars
 a1e86627020c43852446a8e2c2141b3f *src/Makevars.win
 3f7718c8eff22eeda572b8f400e52631 *src/RcppExports.cpp
 a0573e57c80b5e852c78ebd49164f42d *src/built_in_fns.cpp
-c7d93a0647f398012855a3471cd85e29 *src/user_fns.cpp
+621ec740832c6cebb52d6f3319b44dea *src/user_fns.cpp
 8d6ff248d9af660110dbe08e46b33f20 *tests/testthat.R
 6744c61f09041882c4c15c3ee7c26c47 *tests/testthat/test_rou.R
 b28ffd27aa0361a08d4cf1f44e1e94ee *tools/rust_logo.png
-4ce9ca026ab830e289bddd222aacd433 *vignettes/example_user_fns.cpp
 65c0284c309675b5fd77cd9bba58706b *vignettes/rust-using-rcpp-vignette.Rmd
 fc5a186b8389d298539d83d02ff2ed5e *vignettes/rust-vignette.Rmd
 abeddd8ce1acb552052c69ba4f9e6b2c *vignettes/rust.bib
