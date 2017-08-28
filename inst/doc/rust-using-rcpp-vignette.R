@@ -4,8 +4,11 @@ knitr::opts_chunk$set(comment = "#>", collapse = TRUE)
 ## ------------------------------------------------------------------------
 library(rust)
 library(Rcpp)
-mb_available <- require("microbenchmark")
-if (mb_available) library(microbenchmark)
+# Is microbenchmark available?
+got_microbenchmark <- requireNamespace("microbenchmark", quietly = TRUE)
+if (got_microbenchmark) {
+  library(microbenchmark)
+}  
 # Set the size of the simulated sample
 n <- 1000
 
@@ -26,7 +29,7 @@ x_new <- ru_rcpp(logf = ptr_N01, d = 1, n = n, init = 0.1)
 head(x_new$sim_vals)
 
 # Compare performances of ru and ru_rcpp
-if (mb_available) {
+if (got_microbenchmark) {
   res <- microbenchmark(
     old = ru(logf = function(x) -x ^ 2 / 2, d = 1, n = n, init = 0.1),
     new = ru_rcpp(logf = ptr_N01, d = 1, n = n, init = 0.1)
@@ -34,7 +37,7 @@ if (mb_available) {
   print(res, signif = 4)
 }
 
-## ---------------------------------------------------------------------------------------
+## ------------------------------------------------------------------------
 # Three-dimensional normal with positive association ----------------
 rho <- 0.9
 covmat <- matrix(rho, 3, 3) + diag(1 - rho, 3)
@@ -47,7 +50,7 @@ log_dmvnorm <- function(x, mean = rep(0, d), sigma = diag(d)) {
 # Create a pointer to the logdmvnorm C++ function
 ptr_mvn <- create_xptr("logdmvnorm")
 
-if (mb_available) {
+if (got_microbenchmark) {
   res <- microbenchmark(
     old = ru(logf = log_dmvnorm, sigma = covmat, d = 3, n = n,
              init = c(0, 0, 0)), 
@@ -57,9 +60,9 @@ if (mb_available) {
   print(res, signif = 4)
 }  
 
-## ---------------------------------------------------------------------------------------
+## ------------------------------------------------------------------------
 ptr_lnorm <- create_xptr("logdlnorm")
-if (mb_available) {
+if (got_microbenchmark) {
   res <- microbenchmark(
    old = ru(logf = dlnorm, log = TRUE, d = 1, n = n, lower = 0, init = 0.1,
             trans = "BC", lambda = 0),
@@ -69,7 +72,7 @@ if (mb_available) {
   print(res, signif = 4)
 }  
 
-## ---------------------------------------------------------------------------------------
+## ------------------------------------------------------------------------
 set.seed(46)
 # Sample data from a GP(sigma, xi) distribution
 gpd_data <- rgpd(m = 100, xi = -0.5, sigma = 1)
@@ -78,13 +81,13 @@ ss <- gpd_sum_stats(gpd_data)
 # Calculate an initial estimate
 init <- c(mean(gpd_data), 0)
 
-## ---------------------------------------------------------------------------------------
+## ------------------------------------------------------------------------
 # Arguments for ru_rcpp
 ptr_gp <- create_xptr("loggp")
 for_ru_rcpp <- c(list(logf = ptr_gp, init = init, d = 2, n = n,
                  lower = c(0, -Inf)), ss)
 
-if (mb_available) {
+if (got_microbenchmark) {
   res <- microbenchmark(
    old = ru(logf = gpd_logpost, ss = ss, d = 2, n = n, init = init,
             lower = c(0, -Inf)),
@@ -93,7 +96,7 @@ if (mb_available) {
   print(res, signif = 4)
 }  
 
-## ---------------------------------------------------------------------------------------
+## ------------------------------------------------------------------------
 alpha <- 1
 max_phi <- qgamma(0.999, shape = alpha)
 ptr_gam <- create_xptr("logdgamma")
@@ -101,7 +104,7 @@ lambda <- find_lambda_one_d_rcpp(logf = ptr_gam, alpha = alpha,
                                  max_phi = max_phi)
 lambda
 
-## ---------------------------------------------------------------------------------------
+## ------------------------------------------------------------------------
 temp <- do.call(gpd_init, ss)
 min_phi <- pmax(0, temp$init_phi - 2 * temp$se_phi)
 max_phi <- pmax(0, temp$init_phi + 2 * temp$se_phi)

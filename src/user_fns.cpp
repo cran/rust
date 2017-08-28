@@ -42,6 +42,49 @@ double logdmvnorm(const Rcpp::NumericVector& x, const Rcpp::List& pars) {
   return -qform / 2.0  ;
 }
 
+// Cauchy
+
+// [[Rcpp::export]]
+double logcauchy(const Rcpp::NumericVector& x, const Rcpp::List& pars) {
+  return -log(1 + pow(x[0], 2.0)) ;
+}
+
+// Half-Cauchy
+
+// [[Rcpp::export]]
+double loghalfcauchy(const Rcpp::NumericVector& x, const Rcpp::List& pars) {
+  if (x[0] < 0)
+    return R_NegInf ;
+  return -log(1 + pow(x[0], 2.0)) ;
+}
+
+// Mixture of normals
+
+// [[Rcpp::export]]
+double lognormalmix(const Rcpp::NumericVector& x, const Rcpp::List& pars) {
+  double mu = pars["mu"] ;
+  double p = pars["p"] ;
+  double comp1 = exp(-pow(x[0], 2.0) / 2.0)  ;
+  double comp2 = exp(-pow(x[0] - mu, 2.0) / 2.0)  ;
+  return log(p * comp1 + (1 - p) * comp2) ;
+}
+
+// Example 4 from Wakefield et al (1991).
+
+// [[Rcpp::export]]
+double lognormt(const Rcpp::NumericVector& x, const Rcpp::List& pars) {
+  arma::vec mean = as<arma::vec>(pars["mean"]) ;
+  arma::mat sigma1 = as<arma::mat>(pars["sigma1"]) ;
+  arma::mat sigma2 = as<arma::mat>(pars["sigma2"]) ;
+  arma::vec y1 = Rcpp::as<arma::vec>(x) ;
+  arma::vec y = y1 - mean ;
+  arma::vec y2 = Rcpp::as<arma::vec>(x) ;
+  double log_h1 = -arma::as_scalar(y.t() * arma::inv(sigma1) * y) / 2 ;
+  double log_h2 = -2 * log(1 + arma::as_scalar(y.t() * arma::inv(sigma1) * y)
+                             / 2) ;
+  return log_h1 + log_h2  ;
+}
+
 // Lognormal(mu, sigma).
 
 // [[Rcpp::export]]
@@ -121,6 +164,14 @@ SEXP create_xptr(std::string fstr) {
     return(Rcpp::XPtr<funcPtr>(new funcPtr(&logdnorm2))) ;
   else if (fstr == "logdmvnorm")
     return(Rcpp::XPtr<funcPtr>(new funcPtr(&logdmvnorm))) ;
+  else if (fstr == "lognormt")
+    return(Rcpp::XPtr<funcPtr>(new funcPtr(&lognormt))) ;
+  else if (fstr == "loghalfcauchy")
+    return(Rcpp::XPtr<funcPtr>(new funcPtr(&loghalfcauchy))) ;
+  else if (fstr == "logcauchy")
+    return(Rcpp::XPtr<funcPtr>(new funcPtr(&logcauchy))) ;
+  else if (fstr == "lognormalmix")
+    return(Rcpp::XPtr<funcPtr>(new funcPtr(&lognormalmix))) ;
   else if (fstr == "logdlnorm")
     return(Rcpp::XPtr<funcPtr>(new funcPtr(&logdlnorm))) ;
   else if (fstr == "logdgamma")
@@ -234,6 +285,9 @@ SEXP create_phi_to_theta_xptr(std::string fstr) {
 ptr_N01 <- create_xptr("logdN01")
 ptr_bvn <- create_xptr("logdnorm2")
 ptr_mvn <- create_xptr("logdmvnorm")
+ptr_c <- create_xptr("logcauchy")
+ptr_hc <- create_xptr("loghalfcauchy")
+ptr_normt <- create_xptr("lognormt")
 ptr_lnorm <- create_xptr("logdlnorm")
 ptr_gam <- create_xptr("logdgamma")
 ptr_gp <- create_xptr("loggp")
@@ -243,3 +297,4 @@ ptr_phi_to_theta_bc <- create_phi_to_theta_xptr("bc")
 ptr_log_j_bc <- create_log_j_xptr("bc")
 ptr_phi_to_theta_gp <- create_phi_to_theta_xptr("gp")
 */
+

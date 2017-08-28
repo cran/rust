@@ -7,14 +7,15 @@
 #' The density \eqn{f} must be bounded, perhaps after a transformation of variable.
 #'
 #' @param logf A function returning the log of the target density \eqn{f}.
+#'   This function should return \code{-Inf} when the density is zero.
 #' @param ... Further arguments to be passed to \code{logf} and related
 #'   functions.
 #' @param n A numeric scalar.  Number of simulated values required.
 #' @param d A numeric scalar. Dimension of f.
 #' @param init A numeric vector. Initial estimates of the mode of \code{logf}.
 #'   If \code{trans="BC"} or \code{trans = "user"} this is \emph{after} Box-Cox
-#'   transformation or user-defined transformation, but BEFORE any rotation
-#'   of axes.
+#'   transformation or user-defined transformation, but \emph{before} any
+#'   rotation of axes.
 #' @param trans A character scalar. "none" for no transformation, "BC" for
 #'   Box-Cox transformation, "user" for a user-defined transformation.
 #'   If \code{trans = "user"} then the transformation should be specified
@@ -61,11 +62,12 @@
 #' @param lower,upper Numeric vectors.  Lower/upper bounds on the arguments of
 #'   the function \emph{after} any transformation from theta to phi implied by
 #'   the inverse of \code{phi_to_theta}. If \code{rotate = FALSE} these
-#'   are used in the optimizations used to construct the bounding box.  If
-#'   \code{trans = "BC"} components of \code{lower} that are negative are set
-#'   to zero without warning and the bounds implied after the Box-Cox
-#'   transformation are calculated inside \code{ru}.  If \code{rotate = TRUE}
-#'   all optimizations are unconstrained.
+#'   are used in all of the optimizations used to construct the bounding box.
+#'   If \code{rotate = TRUE} then they are use only in the first optimisation
+#'   to maximise the target density.`
+#'   If \code{trans = "BC"} components of \code{lower} that are negative are
+#'   set to zero without warning and the bounds implied after the Box-Cox
+#'   transformation are calculated inside \code{ru}.
 #' @param r A numeric scalar.  Parameter of generalized ratio-of-uniforms.
 #' @param ep A numeric scalar.  Controls initial estimates for optimizations
 #'   to find the b-bounding box parameters.  The default (\code{ep}=0)
@@ -83,7 +85,7 @@
 #'   \code{nlminb} to find a(r) and (bi-(r), bi+(r)) respectively.
 #' @param var_names A character vector.  Names to give to the column(s) of
 #'   the simulated values.
-#' @details If \code{trans = "none"} and \code{rotate = FALSE} then \code{rou}
+#' @details If \code{trans = "none"} and \code{rotate = FALSE} then \code{ru}
 #'   implements the (multivariate) generalized ratio of uniforms method
 #'   described in Wakefield, Gelfand and Smith (1991) using a target
 #'   density whose mode is relocated to the origin (`mode relocation') in the
@@ -138,7 +140,11 @@
 #'     \item{pa}{A numeric scalar.  An estimate of the probability of
 #'       acceptance.}
 #'     \item{d}{A numeric scalar.  The dimension of \code{logf}.}
-#'     \item{logf}{A function. \code{logf} function supplied by the user.}
+#'     \item{logf}{A function. \code{logf} supplied by the user, but
+#'       with f scaled by the maximum of the target density used in the
+#'       ratio-of-uniforms method (i.e. \code{logf_rho}), to avoid numerical
+#'       problems in contouring fin \code{\link{plot.ru}} when
+#'       \code{d = 2}.}
 #'     \item{logf_rho}{A function. The target function actually used in the
 #'       ratio-of-uniforms algorithm.}
 #'     \item{sim_vals_rho}{An \code{n} by \code{d} matrix of values simulated
@@ -266,6 +272,55 @@
 #' plot(x2, xlab = "sigma", ylab = "xi")
 #' abline(a = 0, b = -1 / ss$xm)
 #' summary(x2)
+#'
+#' # Cauchy ========================
+#'
+#' # The bounding box cannot be constructed if r < 1.  For r = 1 the
+#' # bounding box parameters b1-(r) and b1+(r) are attained in the limits
+#' # as x decreases/increases to infinity respectively.  This is fine in
+#' # theory but using r > 1 avoids this problem and the largest probability
+#' # of acceptance is obtained for r approximately equal to 1.26.
+#'
+#' res <- ru(logf = dcauchy, log = TRUE, init = 0, r = 1.26, n = 1000)
+#'
+#' # Half-Cauchy ===================
+#'
+#' log_halfcauchy <- function(x) {
+#'   return(ifelse(x < 0, -Inf, dcauchy(x, log = TRUE)))
+#' }
+#'
+#' # Like the Cauchy case the bounding box cannot be constructed if r < 1.
+#' # We could use r > 1 but the mode is on the edge of the support of the
+#' # density so as an alternative we use a log transformation.
+#'
+#' x <- ru(logf = log_halfcauchy, init = 0, trans = "BC", lambda = 0, n = 1000)
+#' x$pa
+#' plot(x, ru_scale = TRUE)
+#'
+#' # Example 4 from Wakefield et al. (1991) ===================
+#'
+#' # Bivariate normal x bivariate student-t
+#' log_norm_t <- function(x, mean = rep(0, d), sigma1 = diag(d), sigma2 = diag(d)) {
+#'   x <- matrix(x, ncol = length(x))
+#'   d <- ncol(x)
+#'   log_h1 <- -0.5 * (x - mean) %*% solve(sigma1) %*% t(x - mean)
+#'   log_h2 <- -2 * log(1 + 0.5 * x %*% solve(sigma2) %*% t(x))
+#'   return(log_h1 + log_h2)
+#' }
+#'
+#' rho <- 0.9
+#' covmat <- matrix(c(1, rho, rho, 1), 2, 2)
+#' y <- c(0, 0)
+#'
+#' # Case in the top right corner of Table 3
+#' x <- ru(logf = log_norm_t, mean = y, sigma1 = covmat, sigma2 = covmat,
+#'   d = 2, n = 10000, init = y, rotate = FALSE)
+#' x$pa
+#'
+#' # Rotation increases the probability of acceptance
+#' x <- ru(logf = log_norm_t, mean = y, sigma1 = covmat, sigma2 = covmat,
+#'   d = 2, n = 10000, init = y, rotate = TRUE)
+#' x$pa
 #' }
 #' @seealso \code{\link{ru_rcpp}} for a version of \code{\link{ru}} that uses
 #'   the Rcpp package to improve efficiency.
@@ -364,24 +419,17 @@ ru <- function(logf, ..., n = 1, d = 1, init = NULL,
     if (length(lambda) == 1) {
       lambda <- rep(lambda, d)
     }
-    # If rotate = FALSE, adjust lower and upper for the value of lambda
-    if (!rotate) {
-      # Check that all components of upper are positive
-      if (any(upper <= 0)) {
-        stop("when trans = ``BC'' all elements of upper must be positive")
-      }
-      # If any components of lower or upper are negative then set them to zero.
-      lower <- pmax(0, lower)
-      lower <- ifelse(lambda == 0, gm * log(lower),
-                      (lower^lambda - 1) / (lambda * gm ^ (lambda -1)))
-      upper <- ifelse(lambda == 0, gm * log(upper),
-                      (upper^lambda - 1) / (lambda * gm ^ (lambda -1)))
+    # Adjust lower and upper for the value of lambda
+    # Check that all components of upper are positive
+    if (any(upper <= 0)) {
+      stop("when trans = ``BC'' all elements of upper must be positive")
     }
-  }
-  # If rotate = TRUE then don't use impose any (finite) bounds
-  if (rotate) {
-    lower <- rep(-Inf, d)
-    upper <- rep(Inf, d)
+    # If any components of lower or upper are negative then set them to zero.
+    lower <- pmax(0, lower)
+    lower <- ifelse(lambda == 0, gm * log(lower),
+                    (lower^lambda - 1) / (lambda * gm ^ (lambda -1)))
+    upper <- ifelse(lambda == 0, gm * log(upper),
+                    (upper^lambda - 1) / (lambda * gm ^ (lambda -1)))
   }
   # Check that the optimization algorithm is appropriate given the bounds in
   # lower and upper.  If not then change it, with a warning.
@@ -487,7 +535,7 @@ ru <- function(logf, ..., n = 1, d = 1, init = NULL,
   init_psi <- init
   #
   if (trans == "none") {
-    logf_rho <- function(rho,...) {
+    logf_rho <- function(rho, ...) {
       theta <- rho_to_psi(rho)
       val <- logf(theta, ...) - hscale
       structure(val, theta = theta)
@@ -509,9 +557,9 @@ ru <- function(logf, ..., n = 1, d = 1, init = NULL,
   if (trans == "user") {
     logf_rho <- function(rho, ...) {
       phi <- rho_to_psi(rho)
-      theta <- do.call(phi_to_theta, c(phi, user_args))
-      if (!is.finite(theta)) return(-Inf)
-      logj <- do.call(log_j, c(theta, user_args))
+      theta <- do.call(phi_to_theta, c(list(phi), user_args))
+      if (any(!is.finite(theta))) return(-Inf)
+      logj <- do.call(log_j, c(list(theta), user_args))
       val <- logf(theta, ...) - logj - hscale
       structure(val, theta = theta)
     }
@@ -523,7 +571,7 @@ ru <- function(logf, ..., n = 1, d = 1, init = NULL,
   #
   hscale <- logf_rho(init_psi, ...)
   if (is.infinite(hscale)) {
-      stop("posterior density is zero at initial parameter values")
+      stop("The target density is zero at initial parameter values")
   }
   #
   # Calculate a(r) ----------------------------------
@@ -538,7 +586,8 @@ ru <- function(logf, ..., n = 1, d = 1, init = NULL,
   check_finite <- logf_rho(temp$par, ...)
   if (!is.finite(check_finite)) {
     stop(paste("The target log-density is not finite at its mode: mode = ",
-               temp$par, ", function value = ", check_finite, ".", sep=""))
+               paste(temp$par, collapse = ","), ",
+               function value = ", check_finite, ".", sep=""))
   }
   #
   # Scale logf to have a maximum at 0, i.e. a=1 ------------
@@ -595,6 +644,13 @@ ru <- function(logf, ..., n = 1, d = 1, init = NULL,
     rot_mat <- rot_mat / exp(-mean(log(e_vals)) / 2)
   }
   psi_mode <- f_mode
+  #
+  # If rotate = TRUE then don't impose any (finite) bounds
+  if (rotate) {
+    lower <- rep(-Inf, d)
+    upper <- rep(Inf, d)
+  }
+  #
   # Calculate biminus(r) and biplus(r), i = 1, ...d -----------
   # Create list of arguments for find_bs()
   for_find_bs <- list(f_rho = f_rho, d = d, r = r, lower = lower,
@@ -643,7 +699,11 @@ ru <- function(logf, ..., n = 1, d = 1, init = NULL,
     print(res$box)
   }
   res$d <- d
-  res$logf <- logf
+  # Return logf - hscale to avoid over/under-flow in plot.ru() when d = 2.
+  logf_scaled <- function(theta, ...) {
+    return(logf(theta, ...) - hscale)
+  }
+  res$logf <- logf_scaled
   res$logf_args <- list(...)
   res$logf_rho <- logf_rho
   res$f_mode <- f_mode
@@ -679,19 +739,21 @@ find_a <-  function(neg_logf_rho, init_psi, d, r, lower, upper, algor,
   big_finite_val <- 10^10
   #
   # Function to minimize to find a(r).
-  a_obj <- function(psi, ...) {
+  # Use a weird argument name (._p) to avoid a potential argument-matching
+  # problem when nlminb() is used.
+  a_obj <- function(._psi, ...) {
     # Avoid possible problems with nlminb calling function with NaNs.
     # Indicative of solution on boundary, which is OK in the current context.
     # See https://stat_ethz.ch/pipermail/r-help/2015-May/428488.html
-    if (any(is.na(psi))) return(big_val)
-    neg_logf_rho(psi, ...) / (d * r + 1)
+    if (any(is.na(._psi))) return(big_val)
+    neg_logf_rho(._psi, ...) / (d * r + 1)
   }
   #
   if (algor == "optim") {
     # L-BFGS-B and Brent don't like Inf or NA
     if (method == "L-BFGS-B" | method == "Brent") {
-      a_obj <- function(psi, ...) {
-        check <- neg_logf_rho(psi, ...) / (d * r + 1)
+      a_obj <- function(._psi, ...) {
+        check <- neg_logf_rho(._psi, ...) / (d * r + 1)
         if (is.infinite(check)) {
           check <- big_finite_val
         }
@@ -700,38 +762,50 @@ find_a <-  function(neg_logf_rho, init_psi, d, r, lower, upper, algor,
     }
     #
     if (method %in% c("L-BFGS-B","Brent")) {
-      temp <- stats::optim(init_psi, a_obj, control = control, hessian = FALSE,
-                           method = method, lower = lower, upper = upper, ...)
+      temp <- stats::optim(par = init_psi, fn = a_obj, ..., control = control,
+                           hessian = FALSE, method = method, lower = lower,
+                           upper = upper)
     } else {
-      temp <- stats::optim(init_psi, a_obj, control = control, hessian = FALSE,
-                           method = method, ...)
+      temp <- stats::optim(par = init_psi, fn = a_obj, ..., control = control,
+                           hessian = FALSE, method = method)
       # Sometimes Nelder-Mead fails if the initial estimate is too good.
       # ... so avoid non-zero convergence indicator by using BFGS instead.
       if (temp$convergence == 10) {
-        temp <- stats::optim(temp$par, a_obj, control = control,
-                             hessian = FALSE, method = "BFGS", ...)
+        temp <- stats::optim(par = temp$par, fn = a_obj, ...,
+                             control = control, hessian = FALSE,
+                             method = "BFGS")
+      }
+      # In some cases optim with method = "BFGS" may reach it's iteration
+      # limit without the convergence criteria being satisfied.  Then try
+      # nlminb as a further check, but don't use the control argument in
+      # case of conflict between optim() and nlminb().
+      if (temp$convergence == 1) {
+        temp <- stats::nlminb(start = temp$par, objective = a_obj, ...,
+                              lower = lower, upper = upper)
       }
     }
     # Try to calculate Hessian, but avoid problems if an error is produced.
     # An error may occur if the MAP estimate is very close to a parameter
     # boundary.
-    temp$hessian <- try(stats::optimHess(temp$par, a_obj, ...), silent = TRUE)
+    temp$hessian <- try(stats::optimHess(par = temp$par, fn = a_obj, ...),
+                        silent = TRUE)
     return(temp)
   }
   # If we get to here we are using nlminb() ...
-  temp <- stats::nlminb(init_psi, a_obj, lower = lower, upper = upper,
-    control = control, ...)
+  temp <- stats::nlminb(start = init_psi, objective = a_obj, ...,
+                        lower = lower, upper = upper, control = control)
   # Sometimes nlminb isn't sure that it has found the minimum when in fact
   # it has.  Try to check this, and avoid a non-zero convergence indicator
   # by using optim with method="BFGS", starting from nlminb's solution.
   if (temp$convergence > 0) {
-    temp <- stats::optim(temp$par, a_obj, hessian = FALSE, method = "BFGS",
-                         ...)
+    temp <- stats::optim(par = temp$par, fn = a_obj, ..., hessian = FALSE,
+                         method = "BFGS")
   }
   # Try to calculate Hessian, but avoid problems if an error is produced.
   # An error may occur if the MAP estimate is very close to a parameter
   # boundary.
-  temp$hessian <- try(stats::optimHess(temp$par, a_obj, ...), silent = TRUE)
+  temp$hessian <- try(stats::optimHess(par = temp$par, fn = a_obj, ...),
+                      silent = TRUE)
   return(temp)
 }
 
@@ -777,22 +851,24 @@ find_bs <-  function(f_rho, d, r, lower, upper, f_mode, ep, vals, conv, algor,
   big_finite_val <- 10^10
   #
   # Functions to minimize to find biminus(r) and biplus(s), i = 1, ...,d.
-  lower_box <- function(rho, j, ...) {
+  # Use a weird argument name (._rho) to avoid a potential argument-matching
+  # problem when nlminb() is used.
+  lower_box <- function(._rho, j, ...) {
     # Avoid possible problems with nlminb calling function with NaNs.
     # Indicative of solution on boundary, which is OK in the current context.
     # See https://stat_ethz.ch/pipermail/r-help/2015-May/428488.html
-    if (any(is.na(rho))) return(big_val)
-    if (rho[j] == 0L) return(0L)
-    if (rho[j] > 0L) return(big_val)
-    if (f_rho(rho, ...) == 0L) return(big_val)
-    rho[j] * f_rho(rho, ...) ^ (r / (d * r + 1))
+    if (any(is.na(._rho))) return(big_val)
+    if (._rho[j] == 0L) return(0L)
+    if (._rho[j] > 0L) return(big_val)
+    if (f_rho(._rho, ...) == 0L) return(big_val)
+    ._rho[j] * f_rho(._rho, ...) ^ (r / (d * r + 1))
   }
-  upper_box <- function(rho, j, ...) {
-    if (any(is.na(rho))) return(big_val)
-    if (rho[j] == 0) return(0)
-    if (rho[j] < 0) return(big_val)
-    if (f_rho(rho, ...) == 0) return(big_val)
-    -rho[j] * f_rho(rho, ...) ^ (r / (d * r + 1))
+  upper_box <- function(._rho, j, ...) {
+    if (any(is.na(._rho))) return(big_val)
+    if (._rho[j] == 0) return(0)
+    if (._rho[j] < 0) return(big_val)
+    if (f_rho(._rho, ...) == 0) return(big_val)
+    -._rho[j] * f_rho(._rho, ...) ^ (r / (d * r + 1))
   }
   l_box <- u_box <- NULL
   zeros <- rep(0,d)
@@ -808,47 +884,58 @@ find_bs <-  function(f_rho, d, r, lower, upper, f_mode, ep, vals, conv, algor,
     t_upper <- upper - f_mode
     t_upper[j] <- 0
     if (algor == "nlminb") {
-      temp <- stats::nlminb(rho_init, lower_box, upper = t_upper,
-                            lower = lower - f_mode, j = j,
-                            control = control, ...)
+      temp <- stats::nlminb(start = rho_init, objective = lower_box, j = j,
+                            ..., upper = t_upper, lower = lower - f_mode,
+                            control = control)
       l_box[j] <- temp$objective
       # Sometimes nlminb isn't sure that it has found the minimum when in fact
       # it has.  Try to check this, and avoid a non-zero convergence indicator
       # by using optim with method="BFGS", starting from nlminb's solution.
       if (temp$convergence > 0) {
-        temp <- stats::optim(temp$par, lower_box, j = j, hessian = FALSE,
-                             method = "BFGS", ...)
+        temp <- stats::optim(par = temp$par, fn = lower_box, j = j, ...,
+                             hessian = FALSE, method = "BFGS")
         l_box[j] <- temp$value
       }
     }
     if (algor == "optim") {
       # L-BFGS-B and Brent don't like Inf or NA
       if (method == "L-BFGS-B" | method == "Brent") {
-        lower_box <- function(rho, j, ...) {
-          if (any(is.na(rho))) return(big_finite_val)
-          if (rho[j] == 0) return(0)
-          if (rho[j] > 0) return(big_finite_val)
-          if (f_rho(rho, ...) == 0) return(big_finite_val)
-          check <- rho[j] * f_rho(rho, ...) ^ (r / (d * r + 1))
+        lower_box <- function(._rho, j, ...) {
+          if (any(is.na(._rho))) return(big_finite_val)
+          if (._rho[j] == 0) return(0)
+          if (._rho[j] > 0) return(big_finite_val)
+          if (f_rho(._rho, ...) == 0) return(big_finite_val)
+          check <- ._rho[j] * f_rho(._rho, ...) ^ (r / (d * r + 1))
           if (is.infinite(check)) check <- big_finite_val
           check
         }
       }
       if (method == "L-BFGS-B" | method == "Brent") {
-        temp <- stats::optim(rho_init, lower_box, upper = t_upper,
-                             lower = lower - f_mode, j = j,
+        temp <- stats::optim(par = rho_init, fn = lower_box, j = j, ...,
+                             upper = t_upper, lower = lower - f_mode,
                              control = control, method = method,
-                             hessian = FALSE, ...)
+                             hessian = FALSE)
+        l_box[j] <- temp$value
       } else {
-        temp <- stats::optim(rho_init, lower_box, j = j, control = control,
-                             method = method, hessian = FALSE, ...)
+        temp <- stats::optim(par = rho_init, fn = lower_box, j = j, ...,
+                             control = control, method = method,
+                             hessian = FALSE)
+        l_box[j] <- temp$value
         # Sometimes Nelder-Mead fails if the initial estimate is too good.
         # ... so avoid non-zero convergence indicator by using BFGS instead.
-        if (temp$convergence == 10)
-          temp <- stats::optim(temp$par, lower_box, j = j, control = control,
-                               method = "BFGS", hessian = FALSE, ...)
+        if (temp$convergence == 10) {
+          temp <- stats::optim(par = temp$par, fn = lower_box, j = j, ...,
+                               control = control, method = "BFGS",
+                               hessian = FALSE)
+          l_box[j] <- temp$value
+        }
+        # Check using nlminb() if optim's iteration limit is reached.
+        if (temp$convergence == 1) {
+          temp <- stats::nlminb(start = temp$par, objective = lower_box, j = j,
+                                ..., upper = t_upper, lower = lower - f_mode)
+          l_box[j] <- temp$objective
+        }
       }
-      l_box[j] <- temp$value
     }
     vals[j+1, ] <- temp$par
     conv[j+1] <- temp$convergence
@@ -860,47 +947,55 @@ find_bs <-  function(f_rho, d, r, lower, upper, f_mode, ep, vals, conv, algor,
     t_lower <- lower - f_mode
     t_lower[j] <- 0
     if (algor == "nlminb") {
-      temp <- stats::nlminb(rho_init, upper_box, lower = t_lower,
-                            upper = upper - f_mode, j = j, control = control,
-                            ...)
+      temp <- stats::nlminb(start = rho_init, objective = upper_box, j = j,
+                            ..., lower = t_lower, upper = upper - f_mode,
+                            control = control)
       u_box[j] <- -temp$objective
       # Sometimes nlminb isn't sure that it has found the minimum when in fact
       # it has.  Try to check this, and avoid a non-zero convergence indicator
       # by using optim with method="BFGS", starting from nlminb's solution.
       if (temp$convergence > 0) {
-        temp <- stats::optim(temp$par, upper_box, j = j, hessian = FALSE,
-                             method = "BFGS", ...)
-        u_box[j] <- temp$value
+        temp <- stats::optim(par = temp$par, fn = upper_box, j = j, ...,
+                             hessian = FALSE, method = "BFGS")
+        u_box[j] <- -temp$value
       }
     }
     if (algor == "optim") {
       # L-BFGS-B and Brent don't like Inf or NA
       if (method == "L-BFGS-B" | method == "Brent") {
-        upper_box <- function(rho, j, ...) {
-          if (any(is.na(rho))) return(big_finite_val)
-          if (rho[j] == 0) return(0)
-          if (rho[j] < 0) return(big_finite_val)
-          if (f_rho(rho, ...) == 0) return(big_finite_val)
-          check <- -rho[j] * f_rho(rho, ...) ^ (r / (d * r + 1))
+        upper_box <- function(._rho, j, ...) {
+          if (any(is.na(._rho))) return(big_finite_val)
+          if (._rho[j] == 0) return(0)
+          if (._rho[j] < 0) return(big_finite_val)
+          if (f_rho(._rho, ...) == 0) return(big_finite_val)
+          check <- -._rho[j] * f_rho(._rho, ...) ^ (r / (d * r + 1))
           if (is.infinite(check)) check <- big_finite_val
           check
         }
       }
       if (method == "L-BFGS-B" | method == "Brent") {
-        temp <- stats::optim(rho_init, upper_box, lower = t_lower,
-                             upper = upper - f_mode, j = j, control = control,
-                             method = method, ...)
+        temp <- stats::optim(par = rho_init, fn = upper_box, j = j, ...,
+                             lower = t_lower, upper = upper - f_mode,
+                             control = control, method = method)
+        u_box[j] <- -temp$value
       } else {
-        temp <- stats::optim(rho_init, upper_box, j = j, control = control,
-                             method = method, ...)
+        temp <- stats::optim(par = rho_init, fn = upper_box, j = j, ...,
+                             control = control, method = method)
+        u_box[j] <- -temp$value
         # Sometimes Nelder-Mead fails if the initial estimate is too good.
         # ... so avoid non-zero convergence indicator by using BFGS instead.
         if (temp$convergence == 10) {
-          temp <- stats::optim(temp$par, upper_box, j = j, control = control,
-                               method = "BFGS", ...)
+          temp <- stats::optim(par = temp$par, fn = upper_box, j = j, ...,
+                               control = control, method = "BFGS")
+          u_box[j] <- -temp$value
+        }
+        # Check using nlminb() if optim's iteration limit is reached.
+        if (temp$convergence == 1) {
+          temp <- stats::nlminb(start = temp$par, objective = upper_box, j = j,
+                                ..., lower = t_lower, upper = upper - f_mode)
+          u_box[j] <- -temp$objective
         }
       }
-      u_box[j] <- -temp$value
     }
     vals[j+d+1, ] <- temp$par
     conv[j+d+1] <- temp$convergence

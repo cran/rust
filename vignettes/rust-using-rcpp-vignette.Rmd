@@ -22,14 +22,13 @@ This vignette describes a new feature of **rust**: the option for the user to pr
 
 In this vignette we describe in general terms the general setup of the Rcpp-based functions and use examples to illustrate their use.  For more information about these examples see the vignette [Introducing rust](rust-vignette.html)
 
-## Providing a C++ function to `ru_rcpp`
+## Providing a C++ function to `ru_rcpp` {#cpp_fun}
 
 The general way that **rust** enables users to provide their own C++ functions uses external pointers and is based on the [Rcpp Gallery](http://gallery.rcpp.org/) article [Passing user-supplied C++ functions](http://gallery.rcpp.org/articles/passing-cpp-function-pointers/) by Dirk Eddelbuettel.  For a detailed case study of the general approach see the **RcppDE** package [@RcppDE] vignette at the [RcppDE page on CRAN](https://CRAN.R-project.org/package=RcppDE).
 
 The user writes a C++ function to calculate $\log f(x)$.  The current implementation in **rust** requires this function to have a particular structure: it must take a constant reference to an `Rcpp::NumericVector`, say `x`, a constant reference to an `Rcpp::List`, say `pars`, and return a `double` precision scalar. `x` is the argument $x$ of $f(x)$. `pars` is a list containing the values of parameters whose values are not specified inside the function.  This allows the user to change the values of any parameters in the target density without editing the function.  If there are no such parameters then the user must still include the argument `pars` in their function, even though the list provided to the function when it is called will be empty. 
 
-A simple way for the user to provide their C++ functions to create them in a file, say `user_fns.cpp`.  Example content is provided below.  The full file is available on the [rust Github page](https://github.com/paulnorthrop/rust/blob/master/src/user_fns.cpp).  The functions in this file are compiled and made available to R, either using the `Rcpp::sourceCpp` function (e.g. `Rcpp::sourceCpp("user_fns.cpp")`) or using RStudio's Source button on the editor toolbar.  The example content below also includes the function `create_xptr`, which creates an external pointer to a C++ function. See
-\href{http://gallery.rcpp.org/articles/passing-cpp-function-pointers/}{Passing user-supplied C++ functions}.  It is this external pointer that is passed to `ru_rcpp` to perform ratio-of-uniforms sampling.  If the user has written a C++ function, say `new_name`, they need to add to `create_xptr` two lines of code:
+A simple way for the user to provide their C++ functions to create them in a file, say `user_fns.cpp`.  Example content is provided below.  The full file is available on the [rust Github page](https://github.com/paulnorthrop/rust/blob/master/src/user_fns.cpp).  The functions in this file are compiled and made available to R, either using the `Rcpp::sourceCpp` function (e.g. `Rcpp::sourceCpp("user_fns.cpp")`) or using RStudio's Source button on the editor toolbar.  The example content below also includes the function `create_xptr`, which creates an external pointer to a C++ function. See [Passing user-supplied C++ functions](http://gallery.rcpp.org/articles/passing-cpp-function-pointers/).  It is this external pointer that is passed to `ru_rcpp` to perform ratio-of-uniforms sampling.  If the user has written a C++ function, say `new_name`, they need to add to `create_xptr` two lines of code:
 
     else if (fstr == "new_name")  
       return(Rcpp::XPtr<funcPtr>(new funcPtr(&new_name))) ;
@@ -88,13 +87,16 @@ in order that they can create an external pointer for `new_name` using `create_x
     
 ## Examples : `ru_rcpp`
 
-All the examples in the documentation for `ru` are replicated in the documentation for `ru_rcpp`.  Here we consider a subset of the examples from the [Introducing rust](rust-vignette.html) vignette, to illustrate how to provide user-supplied C++ functions to `ru_rcpp` and to compare the performances of `ru` and `ru_rcpp`.
+All the examples in the documentation for `ru` are replicated in the documentation for `ru_rcpp`.  Here we consider a subset of the examples from the [Introducing rust](rust-vignette.html) vignette, to illustrate how to provide user-supplied C++ functions to `ru_rcpp` and to compare the performances of `ru` and `ru_rcpp`.  We use the **microbenchmark** package [@microbenchmark] to make the comparision.
 
 ```{r}
 library(rust)
 library(Rcpp)
-mb_available <- require("microbenchmark")
-if (mb_available) library(microbenchmark)
+# Is microbenchmark available?
+got_microbenchmark <- requireNamespace("microbenchmark", quietly = TRUE)
+if (got_microbenchmark) {
+  library(microbenchmark)
+}  
 # Set the size of the simulated sample
 n <- 1000
 ```
@@ -122,7 +124,7 @@ x_new <- ru_rcpp(logf = ptr_N01, d = 1, n = n, init = 0.1)
 head(x_new$sim_vals)
 
 # Compare performances of ru and ru_rcpp
-if (mb_available) {
+if (got_microbenchmark) {
   res <- microbenchmark(
     old = ru(logf = function(x) -x ^ 2 / 2, d = 1, n = n, init = 0.1),
     new = ru_rcpp(logf = ptr_N01, d = 1, n = n, init = 0.1)
@@ -167,7 +169,7 @@ log_dmvnorm <- function(x, mean = rep(0, d), sigma = diag(d)) {
 # Create a pointer to the logdmvnorm C++ function
 ptr_mvn <- create_xptr("logdmvnorm")
 
-if (mb_available) {
+if (got_microbenchmark) {
   res <- microbenchmark(
     old = ru(logf = log_dmvnorm, sigma = covmat, d = 3, n = n,
              init = c(0, 0, 0)), 
@@ -198,7 +200,7 @@ In this example we use a log transform (Box-Cox parameter $\lambda = 0$) so that
 
 ```{r}
 ptr_lnorm <- create_xptr("logdlnorm")
-if (mb_available) {
+if (got_microbenchmark) {
   res <- microbenchmark(
    old = ru(logf = dlnorm, log = TRUE, d = 1, n = n, lower = 0, init = 0.1,
             trans = "BC", lambda = 0),
@@ -237,7 +239,7 @@ The C++ function to calculate the log-posterior density is:
           for(int i = 1; i < 5; ++i) {
             t1 = pow(sdatj, i) ;
             t2 = (i * sdatj - i - 1) ;
-            total += pow(-1, i) * t1 * t2 * pow(x[1], i) / i / (i + 1) ;
+            total += pow(-1.0, i) * t1 * t2 * pow(x[1], i) / i / (i + 1) ;
           }
         }
         loglik = -m * log(x[0]) - sum_gp / x[0] - total ;
@@ -269,7 +271,7 @@ ptr_gp <- create_xptr("loggp")
 for_ru_rcpp <- c(list(logf = ptr_gp, init = init, d = 2, n = n,
                  lower = c(0, -Inf)), ss)
 
-if (mb_available) {
+if (got_microbenchmark) {
   res <- microbenchmark(
    old = ru(logf = gpd_logpost, ss = ss, d = 2, n = n, init = init,
             lower = c(0, -Inf)),
@@ -307,7 +309,7 @@ lambda
 
 ### Generalized Pareto posterior density: example for `find_lambda_rcpp`
 
-In this example we supply an external pointer to a C++ function `phi_to_theta` that ensures that both parameters of the model are strictly positive, a requirement for the Box-Cox transformation to be applicable. See the [Introducing rust](rust-vignette.html) vignette for the form of  transformation.
+In this example we supply an external pointer to a C++ function `phi_to_theta` that ensures that both parameters of the model are strictly positive, a requirement for the Box-Cox transformation to be applicable. The function `phi_to_theta` must have the same structure as the function used to calculate $\log f$. See [Providing a C++ function to `ru_rcpp`](#cpp_fun) for details. See the [Introducing rust](rust-vignette.html) vignette for the form of the transformation.
 
 ```{r}
 temp <- do.call(gpd_init, ss)
@@ -325,3 +327,7 @@ lambda
 ```
 
 ## References
+
+<script type="text/x-mathjax-config">
+   MathJax.Hub.Config({  "HTML-CSS": { minScaleAdjust: 125, availableFonts: [] }  });
+</script>

@@ -1,3 +1,23 @@
+# rust 1.2.3
+
+## Bug fixes and minor improvements
+
+* In `ru()` and `ru_rcpp()` the constant `hscale` is used to shift `logf` (and hence scale the target density f) in function `logf` in the returned object.  This helps to avoid over/under-flow when contouring f in `plot.ru` when `d = 2`.
+
+* The `var_names` argument to `ru_rcpp` didn't work.  This has been corrected.
+
+* The arguments `lower, upper` to `ru` and `ru_rcpp` are now used, at least partly even when `rotate = TRUE`.  See the updated description of `lower, upper` in the documentation of `ru` and `ru_rcpp`.
+
+* That the function `logf` supplied to `ru` or `ru_rcpp` should return `-Inf` when the density f is zero is stated explicitly in the help files.
+
+* ru() did not work when `trans = "user"` and `d` > 1. This has been corrected.
+
+* Extra checks are used to try to avoid erroneous convergence warnings.
+
+* Incorrectly formatted link to the Rcpp Gallery webpage corrected in the vignette "Rusting Faster: Simulation using Rcpp".
+
+* Extra examples provided for `ru` and for `ru_rcpp`: (a) Cauchy, (b) half-Cauchy and (c) bivariate normal x bivariate student-t.
+
 # rust 1.2.2
 
 ## Bug fixes and minor improvements

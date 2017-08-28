@@ -30,6 +30,38 @@ bool all_pos(const Rcpp::NumericVector& x) {
 }
 
 // [[Rcpp::export]]
+bool any_neg(const Rcpp::NumericVector& x) {
+  return Rcpp::is_true(Rcpp::any(x < 0));
+}
+
+// [[Rcpp::export]]
+bool any_col_nonneg(const Rcpp::NumericMatrix& x) {
+  int ncols = x.ncol();
+  for(int i=0; i < ncols; i++) {
+    if (!any_neg(x(_,i))) {
+      return true ;
+    }
+  }
+  return false ;
+}
+
+// [[Rcpp::export]]
+bool any_pos(const Rcpp::NumericVector& x) {
+  return Rcpp::is_true(Rcpp::any(x > 0));
+}
+
+// [[Rcpp::export]]
+bool any_col_nonpos(const Rcpp::NumericMatrix& x) {
+  int ncols = x.ncol();
+  for(int i=0; i < ncols; i++) {
+    if (!any_pos(x(_,i))) {
+      return true ;
+    }
+  }
+  return false ;
+}
+
+// [[Rcpp::export]]
 Rcpp::NumericVector vecpow(const Rcpp::NumericVector& base,
                            const Rcpp::NumericVector& exp) {
   int n = base.size() ;
@@ -87,6 +119,23 @@ double cpp_logf(const Rcpp::NumericVector& theta, const SEXP& logf,
   funcPtr fun = *xpfun ;
   double val ;
   val = fun(theta, pars) ;
+  return val ;
+}
+
+// Original logf (no transformation) but scaled by the maximum value
+// of the logged target density (perhaps after transformation).
+// Used only in plot.ru() when d = 2 (to avoid over/under-flow).
+
+// [[Rcpp::export]]
+double cpp_logf_scaled(const Rcpp::NumericVector& theta, const SEXP& logf,
+                       const Rcpp::List& pars) {
+  typedef double (*funcPtr)(const Rcpp::NumericVector& x,
+                  const Rcpp::List& pars) ;
+  Rcpp::XPtr<funcPtr> xpfun(logf) ;
+  funcPtr fun = *xpfun ;
+  double val ;
+  double hscale = pars["hscale"] ;
+  val = fun(theta, pars) - hscale ;
   return val ;
 }
 
@@ -437,7 +486,7 @@ Rcpp::List ru_cpp(const int& n, const int& d, const double& r,
   d_r = d * r + 1 ;
   d_box = u_box - l_box ;
   while (nacc < n) {
-    if (ntry % (100 * n) == 0) {
+    if (ntry % 1000 == 0) {
       Rcpp::checkUserInterrupt();
     }
     u = runif(1, 0, a_box)[0] ;
@@ -490,7 +539,7 @@ Rcpp::List ru_cpp_2(const int& n, const int& d, const double& r,
   d_r = d * r + 1 ;
   d_box = u_box - l_box ;
   while (nacc < n) {
-    if (ntry % (100 * n) == 0) {
+    if (ntry % 1000 == 0) {
       Rcpp::checkUserInterrupt();
     }
     u = runif(1, 0, a_box)[0] ;
@@ -562,7 +611,7 @@ Rcpp::List ru_cpp_3(const int& n, const int& d, const double& r,
   d_r = d * r + 1 ;
   d_box = u_box - l_box ;
   while (nacc < n) {
-    if (ntry % (100 * n) == 0) {
+    if (ntry % 1000 == 0) {
       Rcpp::checkUserInterrupt();
     }
     u = runif(1, 0, a_box)[0] ;
@@ -627,7 +676,7 @@ Rcpp::List ru_cpp_4(const int& n, const int& d, const double& r,
   d_r = d * r + 1 ;
   d_box = u_box - l_box ;
   while (nacc < n) {
-    if (ntry % (100 * n) == 0) {
+    if (ntry % 1000 == 0) {
       Rcpp::checkUserInterrupt();
     }
     u = runif(1, 0, a_box)[0] ;

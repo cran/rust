@@ -6,19 +6,23 @@
 #' distribution with log-density \eqn{log f} (up to an additive constant).
 #' \eqn{f} must be bounded, perhaps after a transformation of variable.
 #' The file file `user_fns.cpp` that is sourced before running the examples
-#' below is available at the
-#' [rust Github page](https://github.com/paulnorthrop/rust/blob/master/src/user_fns.cpp).
+#' below is available at the rust Github page at
+#' \url{https://github.com/paulnorthrop/rust/blob/master/src/user_fns.cpp}.
 #'
 #' @param logf An external pointer to a compiled C++ function returning the
 #'   log of the target density \eqn{f}.
+#'   This function should return \code{-Inf} when the density is zero.
+#'   See the \code{vignette("rust-using-rcpp-vignette", package = "rust")},
+#'   particularly the Section
+#'   \strong{Providing a C++ function to \code{ru_rcpp}}, for details.
 #' @param ... Further arguments to be passed to \code{logf} and related
 #'   functions.
 #' @param n A numeric scalar.  Number of simulated values required.
 #' @param d A numeric scalar. Dimension of f.
 #' @param init A numeric vector. Initial estimates of the mode of \code{logf}.
-#'   If \code{trans="BC"} or \code{trans = "user"} this is \emph{after} Box-Cox
-#'   transformation or user-defined transformation, but BEFORE any rotation
-#'   of axes.
+#'   If \code{trans = "BC"} or \code{trans = "user"} this is \emph{after}
+#'   Box-Cox transformation or user-defined transformation, but \emph{before}
+#'   any rotation of axes.
 #' @param trans A character scalar. "none" for no transformation, "BC" for
 #'   Box-Cox transformation, "user" for a user-defined transformation.
 #'   If \code{trans = "user"} then the transformation should be specified
@@ -66,11 +70,12 @@
 #' @param lower,upper Numeric vectors.  Lower/upper bounds on the arguments of
 #'   the function \emph{after} any transformation from theta to phi implied by
 #'   the inverse of \code{phi_to_theta}. If \code{rotate = FALSE} these
-#'   are used in the optimizations used to construct the bounding box.  If
-#'   \code{trans = "BC"} components of \code{lower} that are negative are set
-#'   to zero without warning and the bounds implied after the Box-Cox
-#'   transformation are calculated inside \code{ru}.  If \code{rotate = TRUE}
-#'   all optimizations are unconstrained.
+#'   are used in all of the optimizations used to construct the bounding box.
+#'   If \code{rotate = TRUE} then they are use only in the first optimisation
+#'   to maximise the target density.`
+#'   If \code{trans = "BC"} components of \code{lower} that are negative are
+#'   set to zero without warning and the bounds implied after the Box-Cox
+#'   transformation are calculated inside \code{ru}.
 #' @param r A numeric scalar.  Parameter of generalized ratio-of-uniforms.
 #' @param ep A numeric scalar.  Controls initial estimates for optimizations
 #'   to find the b-bounding box parameters.  The default (\code{ep}=0)
@@ -88,7 +93,7 @@
 #'   \code{nlminb} to find a(r) and (bi-(r), bi+(r)) respectively.
 #' @param var_names A character vector.  Names to give to the column(s) of
 #'   the simulated values.
-#' @details If \code{trans = "none"} and \code{rotate = FALSE} then \code{rou}
+#' @details If \code{trans = "none"} and \code{rotate = FALSE} then \code{ru}
 #'   implements the (multivariate) generalized ratio of uniforms method
 #'   described in Wakefield, Gelfand and Smith (1991) using a target
 #'   density whose mode is relocated to the origin (`mode relocation') in the
@@ -122,7 +127,8 @@
 #'   likely to be close to optimal in many cases, particularly if
 #'   \code{trans = "BC"}.
 #'
-#' See \code{vignette("rust-vignette", package = "rust")} for full details.
+#' See \code{vignette("rust-using-rcpp-vignette", package = "rust")} and
+#' \code{vignette("rust-vignette", package = "rust")} for full details.
 #'
 #' @return An object of class "ru" is a list containing the following
 #'   components:
@@ -143,13 +149,19 @@
 #'     \item{pa}{A numeric scalar.  An estimate of the probability of
 #'       acceptance.}
 #'     \item{d}{A numeric scalar.  The dimension of \code{logf}.}
-#'     \item{logf}{A function. \code{logf} function supplied by the user.}
+#'     \item{logf}{A function. \code{logf} supplied by the user, but
+#'       with f scaled by the maximum of the target density used in the
+#'       ratio-of-uniforms method (i.e. \code{logf_rho}), to avoid numerical
+#'       problems in contouring f in \code{\link{plot.ru}} when
+#'       \code{d = 2}.}
 #'     \item{logf_rho}{A function. The target function actually used in the
 #'       ratio-of-uniforms algorithm.}
 #'     \item{sim_vals_rho}{An \code{n} by \code{d} matrix of values simulated
 #'       from the function used in the ratio-of-uniforms algorithm.}
 #'     \item{logf_args}{A list of further arguments to \code{logf}.}
-#'     \item{logf_rho_args}{A list of further arguments to \code{logf_rho}.}
+#'     \item{logf_rho_args}{A list of further arguments to \code{logf_rho}.
+#'       Note: this component is returned by \code{ru_rcpp} but not
+#'       by \code{ru}.}
 #'     \item{f_mode}{The estimated mode of the target density f, after any
 #'       Box-Cox transformation and/or user supplied transformation, but before
 #'       mode relocation.}
@@ -288,6 +300,48 @@
 #' plot(x2, xlab = "sigma", ylab = "xi")
 #' abline(a = 0, b = -1 / ss$xm)
 #' summary(x2)
+#'
+#' # Cauchy ========================
+#'
+#' ptr_c <- create_xptr("logcauchy")
+#'
+#' # The bounding box cannot be constructed if r < 1.  For r = 1 the
+#' # bounding box parameters b1-(r) and b1+(r) are attained in the limits
+#' # as x decreases/increases to infinity respectively.  This is fine in
+#' # theory but using r > 1 avoids this problem and the largest probability
+#' # of acceptance is obtained for r approximately equal to 1.26.
+#'
+#' res <- ru_rcpp(logf = ptr_c, log = TRUE, init = 0, r = 1.26, n = 1000)
+#'
+#' # Half-Cauchy ===================
+#'
+#' ptr_hc <- create_xptr("loghalfcauchy")
+#'
+#' # Like the Cauchy case the bounding box cannot be constructed if r < 1.
+#' # We could use r > 1 but the mode is on the edge of the support of the
+#' # density so as an alternative we use a log transformation.
+#'
+#' x <- ru_rcpp(logf = ptr_hc, init = 0, trans = "BC", lambda = 0, n = 1000)
+#' x$pa
+#' plot(x, ru_scale = TRUE)
+#'
+#' # Example 4 from Wakefield et al. (1991) ===================
+#' # Bivariate normal x bivariate student-t
+#'
+#' ptr_normt <- create_xptr("lognormt")
+#' rho <- 0.9
+#' covmat <- matrix(c(1, rho, rho, 1), 2, 2)
+#' y <- c(0, 0)
+#'
+#' # Case in the top right corner of Table 3
+#' x <- ru_rcpp(logf = ptr_normt, mean = y, sigma1 = covmat, sigma2 = covmat,
+#'   d = 2, n = 10000, init = y, rotate = FALSE)
+#' x$pa
+#'
+#' # Rotation increases the probability of acceptance
+#' x <- ru_rcpp(logf = ptr_normt, mean = y, sigma1 = covmat, sigma2 = covmat,
+#'   d = 2, n = 10000, init = y, rotate = TRUE)
+#' x$pa
 #' }
 #'
 #' @seealso \code{\link{ru}} for a version of \code{\link{ru_rcpp}} that
@@ -419,24 +473,17 @@ ru_rcpp <- function(logf, ..., n = 1, d = 1, init = NULL,
     if (length(lambda) == 1) {
       lambda <- rep(lambda, d)
     }
-    # If rotate = FALSE, adjust lower and upper for the value of lambda
-    if (!rotate) {
-      # Check that all components of upper are positive
-      if (any(upper <= 0)) {
-        stop("when trans = ``BC'' all elements of upper must be positive")
-      }
-      # If any components of lower or upper are negative then set them to zero.
-      lower <- pmax(0, lower)
-      lower <- ifelse(lambda == 0, gm * log(lower),
-                      (lower^lambda - 1) / (lambda * gm ^ (lambda -1)))
-      upper <- ifelse(lambda == 0, gm * log(upper),
-                      (upper^lambda - 1) / (lambda * gm ^ (lambda -1)))
+    # Adjust lower and upper for the value of lambda
+    # Check that all components of upper are positive
+    if (any(upper <= 0)) {
+      stop("when trans = ``BC'' all elements of upper must be positive")
     }
-  }
-  # If rotate = TRUE then don't use impose any (finite) bounds
-  if (rotate) {
-    lower <- rep(-Inf, d)
-    upper <- rep(Inf, d)
+    # If any components of lower or upper are negative then set them to zero.
+    lower <- pmax(0, lower)
+    lower <- ifelse(lambda == 0, gm * log(lower),
+                    (lower^lambda - 1) / (lambda * gm ^ (lambda -1)))
+    upper <- ifelse(lambda == 0, gm * log(upper),
+                    (upper^lambda - 1) / (lambda * gm ^ (lambda -1)))
   }
   # Check that the optimization algorithm is appropriate given the bounds in
   # lower and upper.  If not then change it, with a warning.
@@ -549,8 +596,8 @@ ru_rcpp <- function(logf, ..., n = 1, d = 1, init = NULL,
     } else {
       ptpfun <- create_psi_to_phi_xptr("has_zero")
     }
-    phi_to_theta = null_phi_to_theta_xptr("no_trans")
-    log_j = create_log_jac_xptr("log_none_jac")
+    phi_to_theta <- null_phi_to_theta_xptr("no_trans")
+    log_j <- create_log_jac_xptr("log_none_jac")
     logf_args <- list(psi_mode = rep(0, d), rot_mat = diag(d), hscale = 0,
                       logf = logf, pars = pars, tpars = tpars, ptpfun = ptpfun,
                       phi_to_theta = phi_to_theta, log_j = log_j,
@@ -602,7 +649,7 @@ ru_rcpp <- function(logf, ..., n = 1, d = 1, init = NULL,
   #
   logf_args$hscale <- do.call(logf_fun, c(list(rho = init_psi), logf_args))
   if (is.infinite(logf_args$hscale)) {
-    stop("posterior density is zero at initial parameter values")
+    stop("The target density is zero at initial parameter values")
   }
   #
   # Calculate a(r) ----------------------------------
@@ -618,7 +665,8 @@ ru_rcpp <- function(logf, ..., n = 1, d = 1, init = NULL,
   check_finite <- do.call(logf_fun, c(list(rho = temp$par), logf_args))
   if (!is.finite(check_finite)) {
     stop(paste("The target log-density is not finite at its mode: mode = ",
-               temp$par, ", function value = ", check_finite, ".", sep=""))
+               paste(temp$par, collapse = ","), ",
+               function value = ", check_finite, ".", sep=""))
   }
   #
   # Scale logf to have a maximum at 0, i.e. a=1 ------------
@@ -681,6 +729,13 @@ ru_rcpp <- function(logf, ..., n = 1, d = 1, init = NULL,
   ru_args$psi_mode <- f_mode
   logf_args$rot_mat <- t(rot_mat)
   logf_args$psi_mode <- f_mode
+  #
+  # If rotate = TRUE then don't use impose any (finite) bounds
+  if (rotate) {
+    lower <- rep(-Inf, d)
+    upper <- rep(Inf, d)
+  }
+  #
   # Calculate biminus(r) and biplus(r), i = 1, ...d -----------
   # Create list of arguments for find_bs()
   for_find_bs <- list(lower = lower, upper = upper, ep = ep, vals = vals,
@@ -703,6 +758,8 @@ ru_rcpp <- function(logf, ..., n = 1, d = 1, init = NULL,
   res <- do.call(ru_fun, ru_args)
   res$pa <- n / res$ntry
   res$ntry <- NULL
+  colnames(res$sim_vals) <- var_names
+  colnames(res$sim_vals_rho) <- paste("rho[", 1:d, "]", sep="")
   box <- c(a_box, l_box, u_box)
   res$box <- cbind(box, vals, conv)
   bs <- paste(paste("b", 1:d, sep=""),rep(c("minus", "plus"), each=d), sep="")
@@ -713,7 +770,11 @@ ru_rcpp <- function(logf, ..., n = 1, d = 1, init = NULL,
     print(res$box)
   }
   res$d <- d
-  res$logf <- cpp_logf
+  # Add hscale to pars (and hence res$logf_args) and return cpp_logf_scaled
+  # (which is cpp_logf - hscale) rather than cpp_logf.
+  # This is to avoid over/under-flow in plot.ru() when d = 2.
+  pars$hscale <- logf_args$hscale
+  res$logf <- cpp_logf_scaled
   res$logf_args <- list(logf = logf, pars = pars)
   res$logf_rho <- logf_fun
   res$logf_rho_args <- logf_args
@@ -780,17 +841,27 @@ cpp_find_a <-  function(init_psi, lower, upper, algor, method, control,
                          control = control, big_val = Inf)
         temp <- do.call(stats::optim, c(ru_args, add_args))
       }
+      # In some cases optim with method = "BFGS" may reach it's iteration
+      # limit without the concergence criteria being satisfied.  Then try
+      # nlminb as a further check, but don't use the control argument in
+      # case of conflict between optim() and nlminb().
+      if (temp$convergence == 1) {
+        add_args <- list(start = temp$par, objective = a_obj_fun,
+                         lower = lower, upper = upper, big_val = Inf)
+        temp <- do.call(stats::nlminb, c(ru_args, add_args))
+      }
     }
   } else {
-    add_args <- list(start = init_psi, objective = a_obj_fun, control = control,
-                     lower = lower, upper = upper, big_val = Inf)
+    add_args <- list(start = init_psi, objective = a_obj_fun,
+                     control = control, lower = lower, upper = upper,
+                     big_val = Inf)
     temp <- do.call(stats::nlminb, c(ru_args, add_args))
     # Sometimes nlminb isn't sure that it has found the minimum when in fact
     # it has.  Try to check this, and avoid a non-zero convergence indicator
     # by using optim with method="BFGS", starting from nlminb's solution.
     if (temp$convergence > 0) {
       add_args <- list(par = temp$par, fn = a_obj_fun, hessian = FALSE,
-                       method = "BFGS", control = control, big_val = Inf)
+                       method = "BFGS", big_val = Inf)
       temp <- do.call(stats::optim, c(ru_args, add_args))
     }
   }
@@ -893,18 +964,29 @@ cpp_find_bs <-  function(lower, upper, ep, vals, conv, algor, method,
                          lower = lower - f_mode, j = j - 1, control = control,
                          method = method, big_val = big_val)
         temp <- do.call(stats::optim, c(ru_args, add_args))
+        l_box[j] <- temp$value
       } else {
         add_args <- list(par = rho_init, fn = lower_box_fun, j = j - 1,
                          control = control, method = method, big_val = Inf)
         temp <- do.call(stats::optim, c(ru_args, add_args))
+        l_box[j] <- temp$value
         # Sometimes Nelder-Mead fails if the initial estimate is too good.
         # ... so avoid non-zero convergence indicator by using BFGS instead.
-        if (temp$convergence == 10)
+        if (temp$convergence == 10) {
           add_args <- list(par = temp$par, fn = lower_box_fun, j = j - 1,
                            control = control, method = "BFGS", big_val = Inf)
           temp <- do.call(stats::optim, c(ru_args, add_args))
+          l_box[j] <- temp$value
+        }
+        # Check using nlminb() if optim's iteration limit is reached.
+        if (temp$convergence == 1) {
+          add_args <- list(start = temp$par, objective = lower_box_fun,
+                           upper = t_upper, lower = lower - f_mode, j = j - 1,
+                           big_val = Inf)
+          temp <- do.call(stats::nlminb, c(ru_args, add_args))
+          l_box[j] <- temp$objective
+        }
       }
-      l_box[j] <- temp$value
     }
     vals[j+1, ] <- temp$par
     conv[j+1] <- temp$convergence
@@ -928,7 +1010,7 @@ cpp_find_bs <-  function(lower, upper, ep, vals, conv, algor, method,
         add_args <- list(par = temp$par, fn = upper_box_fun, j = j - 1,
                          method = "BFGS", big_val = Inf)
         temp <- do.call(stats::optim, c(ru_args, add_args))
-        u_box[j] <- temp$value
+        u_box[j] <- -temp$value
       }
     }
     if (algor == "optim") {
@@ -938,19 +1020,29 @@ cpp_find_bs <-  function(lower, upper, ep, vals, conv, algor, method,
                          lower = t_lower, upper = upper - f_mode, j = j - 1,
                          control = control, method = method, big_val = big_val)
         temp <- do.call(stats::optim, c(ru_args, add_args))
+        u_box[j] <- -temp$value
       } else {
         add_args <- list(par = rho_init, fn = upper_box_fun, j = j - 1,
                          control = control, method = method, big_val = Inf)
         temp <- do.call(stats::optim, c(ru_args, add_args))
+        u_box[j] <- -temp$value
         # Sometimes Nelder-Mead fails if the initial estimate is too good.
         # ... so avoid non-zero convergence indicator by using BFGS instead.
         if (temp$convergence == 10) {
           add_args <- list(par = temp$par, fn = upper_box_fun, j = j - 1,
                            control = control, method = "BFGS", big_val = Inf)
           temp <- do.call(stats::optim, c(ru_args, add_args))
+          u_box[j] <- -temp$value
+        }
+        # Check using nlminb() if optim's iteration limit is reached.
+        if (temp$convergence == 1) {
+          add_args <- list(start = rho_init, objective = upper_box_fun,
+                           lower = t_lower, upper = upper - f_mode, j = j - 1,
+                           big_val = Inf)
+          temp <- do.call(stats::nlminb, c(ru_args, add_args))
+          u_box[j] <- -temp$objective
         }
       }
-      u_box[j] <- -temp$value
     }
     vals[j+d+1, ] <- temp$par
     conv[j+d+1] <- temp$convergence

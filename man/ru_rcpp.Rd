@@ -16,7 +16,11 @@ ru_rcpp(logf, ..., n = 1, d = 1, init = NULL, trans = c("none", "BC",
 }
 \arguments{
 \item{logf}{An external pointer to a compiled C++ function returning the
-log of the target density \eqn{f}.}
+log of the target density \eqn{f}.
+This function should return \code{-Inf} when the density is zero.
+See the \code{vignette("rust-using-rcpp-vignette", package = "rust")},
+particularly the Section
+\strong{Providing a C++ function to \code{ru_rcpp}}, for details.}
 
 \item{...}{Further arguments to be passed to \code{logf} and related
 functions.}
@@ -26,9 +30,9 @@ functions.}
 \item{d}{A numeric scalar. Dimension of f.}
 
 \item{init}{A numeric vector. Initial estimates of the mode of \code{logf}.
-If \code{trans="BC"} or \code{trans = "user"} this is \emph{after} Box-Cox
-transformation or user-defined transformation, but BEFORE any rotation
-of axes.}
+If \code{trans = "BC"} or \code{trans = "user"} this is \emph{after}
+Box-Cox transformation or user-defined transformation, but \emph{before}
+any rotation of axes.}
 
 \item{trans}{A character scalar. "none" for no transformation, "BC" for
 Box-Cox transformation, "user" for a user-defined transformation.
@@ -85,11 +89,12 @@ FALSE with a warning.}
 \item{lower, upper}{Numeric vectors.  Lower/upper bounds on the arguments of
 the function \emph{after} any transformation from theta to phi implied by
 the inverse of \code{phi_to_theta}. If \code{rotate = FALSE} these
-are used in the optimizations used to construct the bounding box.  If
-\code{trans = "BC"} components of \code{lower} that are negative are set
-to zero without warning and the bounds implied after the Box-Cox
-transformation are calculated inside \code{ru}.  If \code{rotate = TRUE}
-all optimizations are unconstrained.}
+are used in all of the optimizations used to construct the bounding box.
+If \code{rotate = TRUE} then they are use only in the first optimisation
+to maximise the target density.`
+If \code{trans = "BC"} components of \code{lower} that are negative are
+set to zero without warning and the bounds implied after the Box-Cox
+transformation are calculated inside \code{ru}.}
 
 \item{r}{A numeric scalar.  Parameter of generalized ratio-of-uniforms.}
 
@@ -134,13 +139,19 @@ An object of class "ru" is a list containing the following
     \item{pa}{A numeric scalar.  An estimate of the probability of
       acceptance.}
     \item{d}{A numeric scalar.  The dimension of \code{logf}.}
-    \item{logf}{A function. \code{logf} function supplied by the user.}
+    \item{logf}{A function. \code{logf} supplied by the user, but
+      with f scaled by the maximum of the target density used in the
+      ratio-of-uniforms method (i.e. \code{logf_rho}), to avoid numerical
+      problems in contouring f in \code{\link{plot.ru}} when
+      \code{d = 2}.}
     \item{logf_rho}{A function. The target function actually used in the
       ratio-of-uniforms algorithm.}
     \item{sim_vals_rho}{An \code{n} by \code{d} matrix of values simulated
       from the function used in the ratio-of-uniforms algorithm.}
     \item{logf_args}{A list of further arguments to \code{logf}.}
-    \item{logf_rho_args}{A list of further arguments to \code{logf_rho}.}
+    \item{logf_rho_args}{A list of further arguments to \code{logf_rho}.
+      Note: this component is returned by \code{ru_rcpp} but not
+      by \code{ru}.}
     \item{f_mode}{The estimated mode of the target density f, after any
       Box-Cox transformation and/or user supplied transformation, but before
       mode relocation.}
@@ -150,11 +161,11 @@ Uses the generalized ratio-of-uniforms method to simulate from a
 distribution with log-density \eqn{log f} (up to an additive constant).
 \eqn{f} must be bounded, perhaps after a transformation of variable.
 The file file `user_fns.cpp` that is sourced before running the examples
-below is available at the
-[rust Github page](https://github.com/paulnorthrop/rust/blob/master/src/user_fns.cpp).
+below is available at the rust Github page at
+\url{https://github.com/paulnorthrop/rust/blob/master/src/user_fns.cpp}.
 }
 \details{
-If \code{trans = "none"} and \code{rotate = FALSE} then \code{rou}
+If \code{trans = "none"} and \code{rotate = FALSE} then \code{ru}
   implements the (multivariate) generalized ratio of uniforms method
   described in Wakefield, Gelfand and Smith (1991) using a target
   density whose mode is relocated to the origin (`mode relocation') in the
@@ -188,7 +199,8 @@ If \code{trans = "none"} and \code{rotate = FALSE} then \code{rou}
   likely to be close to optimal in many cases, particularly if
   \code{trans = "BC"}.
 
-See \code{vignette("rust-vignette", package = "rust")} for full details.
+See \code{vignette("rust-using-rcpp-vignette", package = "rust")} and
+\code{vignette("rust-vignette", package = "rust")} for full details.
 }
 \examples{
 n <- 1000
@@ -315,6 +327,48 @@ x2 <- do.call(ru_rcpp, for_ru_rcpp)
 plot(x2, xlab = "sigma", ylab = "xi")
 abline(a = 0, b = -1 / ss$xm)
 summary(x2)
+
+# Cauchy ========================
+
+ptr_c <- create_xptr("logcauchy")
+
+# The bounding box cannot be constructed if r < 1.  For r = 1 the
+# bounding box parameters b1-(r) and b1+(r) are attained in the limits
+# as x decreases/increases to infinity respectively.  This is fine in
+# theory but using r > 1 avoids this problem and the largest probability
+# of acceptance is obtained for r approximately equal to 1.26.
+
+res <- ru_rcpp(logf = ptr_c, log = TRUE, init = 0, r = 1.26, n = 1000)
+
+# Half-Cauchy ===================
+
+ptr_hc <- create_xptr("loghalfcauchy")
+
+# Like the Cauchy case the bounding box cannot be constructed if r < 1.
+# We could use r > 1 but the mode is on the edge of the support of the
+# density so as an alternative we use a log transformation.
+
+x <- ru_rcpp(logf = ptr_hc, init = 0, trans = "BC", lambda = 0, n = 1000)
+x$pa
+plot(x, ru_scale = TRUE)
+
+# Example 4 from Wakefield et al. (1991) ===================
+# Bivariate normal x bivariate student-t
+
+ptr_normt <- create_xptr("lognormt")
+rho <- 0.9
+covmat <- matrix(c(1, rho, rho, 1), 2, 2)
+y <- c(0, 0)
+
+# Case in the top right corner of Table 3
+x <- ru_rcpp(logf = ptr_normt, mean = y, sigma1 = covmat, sigma2 = covmat,
+  d = 2, n = 10000, init = y, rotate = FALSE)
+x$pa
+
+# Rotation increases the probability of acceptance
+x <- ru_rcpp(logf = ptr_normt, mean = y, sigma1 = covmat, sigma2 = covmat,
+  d = 2, n = 10000, init = y, rotate = TRUE)
+x$pa
 }
 
 }
