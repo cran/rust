@@ -1,6 +1,11 @@
 ## ---- include = FALSE----------------------------------------------------
 knitr::opts_chunk$set(comment = "#>", collapse = TRUE)
 
+required <- c("revdbayes")
+
+if (!all(unlist(lapply(required, function(pkg) requireNamespace(pkg, quietly = TRUE)))))
+  knitr::opts_chunk$set(eval = FALSE)
+
 ## ---- echo=FALSE, results='asis'-----------------------------------------
 d <- 1:6
 pa <- (pi * exp(1)) ^ (d /2) / (2 ^ d * (1 + d / 2) ^ (1 + d /2))
@@ -35,9 +40,9 @@ x2 <- ru(logf = gpd_logpost, ss = ss, d = 2, n = n, init = init,
 # and ranges of phi1 and phi2 over over which to evaluate the posterior to find
 # a suitable value of lambda.
 #
-# \code{gpd_init} returns estimates of phi and associated estimated standard 
+# gpd_init returns estimates of phi and associated estimated standard 
 # errors based on the data alone.  This gives a basis for setting 
-# \code{min_phi} and \code{max_phi} provided that the prior the prior is not
+# min_phi and max_phi provided that the prior the prior is not
 # strongly informative.
 temp <- do.call(gpd_init, ss)
 min_phi <- pmax(0, temp$init_phi - 2 * temp$se_phi)

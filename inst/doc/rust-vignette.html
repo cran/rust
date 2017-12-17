@@ -12,7 +12,7 @@
 
 <meta name="author" content="Paul Northrop" />
 
-<meta name="date" content="2017-06-28" />
+<meta name="date" content="2017-12-17" />
 
 <title>Introducing rust: Ratio-of-Uniforms Simulation with Transformation</title>
 
@@ -70,7 +70,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <h1 class="title toc-ignore">Introducing rust: Ratio-of-Uniforms Simulation with Transformation</h1>
 <h4 class="author"><em>Paul Northrop</em></h4>
-<h4 class="date"><em>2017-06-28</em></h4>
+<h4 class="date"><em>2017-12-17</em></h4>
 
 
 <div id="TOC">
@@ -92,8 +92,8 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 </ul>
 </div>
 
-<p>The <strong>rust</strong> package implements the multivariate generalized ratio-of-uniforms method of simulating random variates from a <span class="math inline">\(d\)</span>-dimensional continuous distribution. The user specifies (the log of) a positive target function <span class="math inline">\(f\)</span> that is proportional to the density function of the distribution.</p>
-<p>The user can provide either an R function (to <code>ru</code>) or, from version 1.2.0, a (pointer to a) C++ function (to <code>ru_rcpp</code>). This vignette gives examples of the former. For examples of the latter see the vignette <a href="rust-using-rcpp-vignette.html">Rusting faster: Speedy Simulation using Rcpp</a></p>
+<p>The <strong>rust</strong> package implements the multivariate generalized ratio-of-uniforms method of simulating random variates from a <span class="math inline">\(d\)</span>-dimensional continuous distribution. The user specifies (the log of) a positive target function <span class="math inline">\(f\)</span> that is proportional to the density function of the distribution. For guidance on which target functions are suitable see the vignette <a href="rust-when-to-use-vignette.html">When can rust be used?</a>.</p>
+<p>The user can provide either an R function (to <code>ru</code>) or, from version 1.2.0, a (pointer to a) C++ function (to <code>ru_rcpp</code>). This vignette gives examples of the former. For examples of the latter see the vignette <a href="rust-using-rcpp-vignette.html">Rusting faster: Speedy Simulation using Rcpp</a>.</p>
 <p>The ratio-of-uniforms method has been used to simulate from low-dimensional distributions in Bayesian analyses, either as part of a Gibbs sampler, a Markov Chain Monte Carlo (MCMC) algorithm, <span class="citation">(Wakefield et al. 1994)</span> or to simulate directly from a posterior distribution <span class="citation">(Northrop, Attalides, and Jonathan 2016)</span>. <strong>rust</strong> is unlikely to be of direct use in high-dimensional problems because it’s efficiency decreases with dimension, but it may provide an alternative to MCMC methods in Bayesian analyses of models with small numbers of parameters. <strong>rust</strong> is used by the package <strong>revdbayes</strong> package <span class="citation">(Northrop 2017)</span> to perform Bayesian extreme value anlayses. Potential advantages over MCMC methods are that it produces a random sample of the desired size rather than a dependent sample and avoids the need for MCMC convergence diagostics.</p>
 <p>The generalized ratio-of-uniforms method is an acceptance-rejection algorithm: proposals are simulated uniformly over a <span class="math inline">\((d+1)\)</span>-dimensional region, typically a box, that bounds an acceptance region <span class="math inline">\(C(r)\)</span>, where <span class="math inline">\(r \geq 0\)</span> is a tuning parameter. The <em>probability of acceptance</em> <span class="math inline">\(p_a(d, r)\)</span>, i.e. the probability that an arbitrary proposal is accepted, is given by the ratio of the volume of <span class="math inline">\(C(r)\)</span> to the volume of the bounding region. <span class="citation">Wakefield, Gelfand, and Smith (1991)</span> suggest the strategy of relocating the mode of <span class="math inline">\(f\)</span> to the origin as a means of increasing efficiency, in the sense of increasing <span class="math inline">\(p_a(d, r)\)</span>. However, <span class="math inline">\(p_a(d, r)\)</span> may still be low even after mode relocation. In some cases it is not possible to find a simple region to bound <span class="math inline">\(C(r)\)</span>, which means that the ratio-of-uniforms method cannot be used. Transformation of variable, such as the Box-Cox family <span class="citation">(Box and Cox 1964)</span> provided in <strong>rust</strong>, can be helpful in these instances. In the multi-dimensional cases strong association between the variables tends to result in a low <span class="math inline">\(p_a(d, r)\)</span>. <strong>rust</strong> finds a rotation of variable axes that reduces the association to increase <span class="math inline">\(p_a(d, r)\)</span>. The user can also specify their own variable transformation.</p>
 <p>The main function in the rust package is <code>ru</code>, which implments the generalized ratio-of-uniforms algorithm. Also provided are two functions, <code>find_lambda</code> and <code>find_lambda_one_d</code>, that may be used to set a suitable value for the parameter <code>lambda</code> if Box-Cox transformation is used prior to simulation. These are somewhat <em>ad hoc</em> but they work well on the examples studied so far. Basic plot and summary methods are also provided.</p>
@@ -105,11 +105,11 @@ a(r) &amp;=&amp; \sup_\chi \, f(x)^{1 / (r d + 1)}, \\
 b_i^-(r) &amp;=&amp; \inf_{\chi_i^-} \, x_i \, f(x)^{r / (r d + 1)}, \\  
 b_i^+(r) &amp;=&amp; \sup_{\chi_i^+} \, x_i \, f(x)^{r / (r d + 1)},  
 \end{eqnarray}
-\]</span> <span class="math inline">\(\chi_i^- = \{ x \in \chi, x_i \leq 0 \}\)</span> and <span class="math inline">\(\chi_i^+ = \{ x \in \chi, x_i \geq 0 \}\)</span>. The probability of acceptance <span class="math inline">\(p_a(d, r)\)</span> of a point simulated uniformly over the bounding box is given by <span class="math display">\[ p_a(d, r) = \frac{\int f(x) {\rm ~d}x}{(r d + 1) \, a(r) \displaystyle\prod_{i=1}^d \left[b_i^+(r) -b_i^-(r) \right]}. \]</span></p>
+\]</span> where <span class="math inline">\(\chi_i^- = \{ x \in \chi, x_i \leq 0 \}\)</span> and <span class="math inline">\(\chi_i^+ = \{ x \in \chi, x_i \geq 0 \}\)</span>. The probability of acceptance <span class="math inline">\(p_a(d, r)\)</span> of a point simulated uniformly over the bounding box is given by <span class="math display">\[ p_a(d, r) = \frac{\int f(x) {\rm ~d}x}{(r d + 1) \, a(r) \displaystyle\prod_{i=1}^d \left[b_i^+(r) -b_i^-(r) \right]}. \]</span></p>
 <div id="example-the-multivariate-normal-distribution" class="section level3">
 <h3>Example: the multivariate normal distribution</h3>
 <p>To study how the efficiency of the ratio-of-uniforms method deceases with dimension <span class="math inline">\(d\)</span> a useful benchmark is provided by the zero-mean <span class="math inline">\(d\)</span>-dimensional normal distribution with independent components. Without loss of generality we work with the case with unit marginal variances, i.e. <span class="math display">\[ f(x) \propto \exp\left( -\frac12 \sum_{i=1}^d x_i^2 \right).\]</span></p>
-<p>For all dimensions <span class="math inline">\(d\)</span> the maximal probabilty of acceptance occurs when <span class="math inline">\(r = 1/2\)</span>, giving <span class="math display">\[ p_a(d, 1/2) = \frac{(\pi e)^{d/2}}{2^d (1+d/2)^{1+d/2}}. \]</span> The maximal probabilty of acceptance decreases rapidly with <span class="math inline">\(d\)</span>, as the following table shows.</p>
+<p>For all dimensions <span class="math inline">\(d\)</span> the maximal probabilty of acceptance occurs when <span class="math inline">\(r = 1/2\)</span>, giving <span class="math display">\[ p_a(d, 1/2) = \frac{(\pi e)^{d/2}}{2^d (1+d/2)^{1+d/2}}. \]</span> The maximal probabilty of acceptance decreases rapidly as <span class="math inline">\(d\)</span> increases, as the following table shows.</p>
 <table>
 <caption><span class="math inline">\(p_a(d, 1/2)\)</span> as <span class="math inline">\(d\)</span> varies.</caption>
 <thead>
@@ -189,9 +189,9 @@ x2 &lt;-<span class="st"> </span><span class="kw">ru</span>(<span class="dt">log
 <span class="co"># and ranges of phi1 and phi2 over over which to evaluate the posterior to find</span>
 <span class="co"># a suitable value of lambda.</span>
 <span class="co">#</span>
-<span class="co"># \code{gpd_init} returns estimates of phi and associated estimated standard </span>
+<span class="co"># gpd_init returns estimates of phi and associated estimated standard </span>
 <span class="co"># errors based on the data alone.  This gives a basis for setting </span>
-<span class="co"># \code{min_phi} and \code{max_phi} provided that the prior the prior is not</span>
+<span class="co"># min_phi and max_phi provided that the prior the prior is not</span>
 <span class="co"># strongly informative.</span>
 temp &lt;-<span class="st"> </span><span class="kw">do.call</span>(gpd_init, ss)
 min_phi &lt;-<span class="st"> </span><span class="kw">pmax</span>(<span class="dv">0</span>, temp$init_phi -<span class="st"> </span><span class="dv">2</span> *<span class="st"> </span>temp$se_phi)
@@ -221,10 +221,12 @@ lambda
 <span class="co">#&gt; $phi_to_theta</span>
 <span class="co">#&gt; function (phi) </span>
 <span class="co">#&gt; c(phi[1], phi[2] - phi[1]/ss$xm)</span>
+<span class="co">#&gt; &lt;bytecode: 0x0000000012f8bab8&gt;</span>
 <span class="co">#&gt; </span>
 <span class="co">#&gt; $log_j</span>
 <span class="co">#&gt; function (x) </span>
-<span class="co">#&gt; 0</span></code></pre></div>
+<span class="co">#&gt; 0</span>
+<span class="co">#&gt; &lt;bytecode: 0x0000000012f3cdf0&gt;</span></code></pre></div>
 <p>We sample from the Box-Cox transformed density, first without, and then with, rotation of axes.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Sample on Box-Cox transformed, without rotation</span>
 x3 &lt;-<span class="st"> </span><span class="kw">ru</span>(<span class="dt">logf =</span> gpd_logpost, <span class="dt">ss =</span> ss, <span class="dt">d =</span> <span class="dv">2</span>, <span class="dt">n =</span> n, <span class="dt">trans =</span> <span class="st">&quot;BC&quot;</span>,
@@ -481,7 +483,7 @@ x4 &lt;-<span class="st"> </span><span class="kw">ru</span>(<span class="dt">log
   (function () {
     var script = document.createElement("script");
     script.type = "text/javascript";
-    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
     document.getElementsByTagName("head")[0].appendChild(script);
   })();
 </script>

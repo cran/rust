@@ -14,11 +14,16 @@ bibliography: rust.bib
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(comment = "#>", collapse = TRUE)
+
+required <- c("revdbayes")
+
+if (!all(unlist(lapply(required, function(pkg) requireNamespace(pkg, quietly = TRUE)))))
+  knitr::opts_chunk$set(eval = FALSE)
 ```
 
-The **rust** package implements the multivariate generalized ratio-of-uniforms method of simulating random variates from a $d$-dimensional continuous distribution.  The user specifies (the log of) a positive target function $f$ that is proportional to the density function of the distribution.  
+The **rust** package implements the multivariate generalized ratio-of-uniforms method of simulating random variates from a $d$-dimensional continuous distribution.  The user specifies (the log of) a positive target function $f$ that is proportional to the density function of the distribution.  For guidance on which target functions are suitable see the vignette [When can rust be used?](rust-when-to-use-vignette.html). 
 
-The user can provide either an R function (to `ru`) or, from version 1.2.0, a (pointer to a) C++ function (to `ru_rcpp`).  This vignette gives examples of the former.  For examples of the latter see the vignette [Rusting faster: Speedy Simulation using Rcpp](rust-using-rcpp-vignette.html) 
+The user can provide either an R function (to `ru`) or, from version 1.2.0, a (pointer to a) C++ function (to `ru_rcpp`).  This vignette gives examples of the former.  For examples of the latter see the vignette [Rusting faster: Speedy Simulation using Rcpp](rust-using-rcpp-vignette.html). 
 
 The ratio-of-uniforms method has been used to simulate from low-dimensional distributions in Bayesian analyses, either as part of a Gibbs sampler, a Markov Chain Monte Carlo (MCMC) algorithm, [@WSRG1994] or to simulate directly from a posterior distribution [@NAJ2016].  **rust** is unlikely to be of direct use in high-dimensional problems because it's efficiency decreases with dimension, but it may provide an alternative to MCMC methods in Bayesian analyses of models with small numbers of parameters.  **rust** is used by the package **revdbayes** package [@revdbayes] to perform Bayesian extreme value anlayses.  Potential advantages over MCMC methods are that it produces a random sample of the desired size rather than a dependent sample and avoids the need for MCMC convergence diagostics.  
 
@@ -38,7 +43,7 @@ b_i^-(r) &=& \inf_{\chi_i^-} \, x_i \, f(x)^{r / (r d + 1)}, \\
 b_i^+(r) &=& \sup_{\chi_i^+} \, x_i \, f(x)^{r / (r d + 1)},  
 \end{eqnarray}
 $$
-$\chi_i^- = \{ x \in \chi, x_i \leq 0 \}$ and $\chi_i^+ = \{ x \in \chi, x_i \geq 0 \}$.
+where $\chi_i^- = \{ x \in \chi, x_i \leq 0 \}$ and $\chi_i^+ = \{ x \in \chi, x_i \geq 0 \}$.
 The probability of acceptance $p_a(d, r)$ of a point simulated uniformly over the bounding box is given by
 $$ p_a(d, r) = \frac{\int f(x) {\rm ~d}x}{(r d + 1) \, a(r) \displaystyle\prod_{i=1}^d \left[b_i^+(r) -b_i^-(r) \right]}. $$
 
@@ -50,7 +55,7 @@ $$ f(x) \propto \exp\left( -\frac12 \sum_{i=1}^d x_i^2 \right).$$
 
 For all dimensions $d$ the maximal probabilty of acceptance occurs when $r = 1/2$, giving
 $$ p_a(d, 1/2) = \frac{(\pi e)^{d/2}}{2^d (1+d/2)^{1+d/2}}. $$
-The maximal probabilty of acceptance decreases rapidly with $d$, as the following table shows.
+The maximal probabilty of acceptance decreases rapidly as $d$ increases, as the following table shows.
 
 ```{r, echo=FALSE, results='asis'}
 d <- 1:6
@@ -137,9 +142,9 @@ Now we perform Box-Cox transformation. We define $\phi_1 = \sigma, \phi_2 = \xi 
 # and ranges of phi1 and phi2 over over which to evaluate the posterior to find
 # a suitable value of lambda.
 #
-# \code{gpd_init} returns estimates of phi and associated estimated standard 
+# gpd_init returns estimates of phi and associated estimated standard 
 # errors based on the data alone.  This gives a basis for setting 
-# \code{min_phi} and \code{max_phi} provided that the prior the prior is not
+# min_phi and max_phi provided that the prior the prior is not
 # strongly informative.
 temp <- do.call(gpd_init, ss)
 min_phi <- pmax(0, temp$init_phi - 2 * temp$se_phi)

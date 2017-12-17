@@ -5,7 +5,7 @@ rust <img src="tools/rust_logo.png" align="right" />
 
 [![Travis-CI Build Status](https://travis-ci.org/paulnorthrop/rust.svg?branch=master)](https://travis-ci.org/paulnorthrop/rust) [![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/paulnorthrop/rust?branch=master&svg=true)](https://ci.appveyor.com/project/paulnorthrop/rust) [![Coverage Status](https://codecov.io/github/paulnorthrop/rust/coverage.svg?branch=master)](https://codecov.io/github/paulnorthrop/rust?branch=master) [![CRAN\_Status\_Badge](https://www.r-pkg.org/badges/version/rust)](https://cran.r-project.org/package=rust)
 
-ratio-of-uniforms simulation with transformation
+Ratio-of-uniforms simulation with transformation
 ------------------------------------------------
 
 ### What does rust do?
@@ -46,4 +46,4 @@ install.packages("rust")
 
 ### Vignettes
 
-See `vignette("rust-vignette", package = "rust")` for an overview of the package and `vignette("rust-using-rcpp-vignette", package = "rust")` for information on how to take advantage of the Rcpp package.
+See `vignette("rust-vignette", package = "rust")` for an overview of the package, `vignette("rust-when-to-use-vignette", package = "rust")` for guidance on when `rust` can be used and `vignette("rust-using-rcpp-vignette", package = "rust")` for information on how to take advantage of the Rcpp package.
