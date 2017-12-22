@@ -12,7 +12,7 @@
 
 <meta name="author" content="Paul Northrop" />
 
-<meta name="date" content="2017-12-17" />
+<meta name="date" content="2017-12-21" />
 
 <title>Introducing rust: Ratio-of-Uniforms Simulation with Transformation</title>
 
@@ -70,7 +70,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <h1 class="title toc-ignore">Introducing rust: Ratio-of-Uniforms Simulation with Transformation</h1>
 <h4 class="author"><em>Paul Northrop</em></h4>
-<h4 class="date"><em>2017-12-17</em></h4>
+<h4 class="date"><em>2017-12-21</em></h4>
 
 
 <div id="TOC">
@@ -221,12 +221,12 @@ lambda
 <span class="co">#&gt; $phi_to_theta</span>
 <span class="co">#&gt; function (phi) </span>
 <span class="co">#&gt; c(phi[1], phi[2] - phi[1]/ss$xm)</span>
-<span class="co">#&gt; &lt;bytecode: 0x0000000012f8bab8&gt;</span>
+<span class="co">#&gt; &lt;bytecode: 0x00000000132de9c0&gt;</span>
 <span class="co">#&gt; </span>
 <span class="co">#&gt; $log_j</span>
 <span class="co">#&gt; function (x) </span>
 <span class="co">#&gt; 0</span>
-<span class="co">#&gt; &lt;bytecode: 0x0000000012f3cdf0&gt;</span></code></pre></div>
+<span class="co">#&gt; &lt;bytecode: 0x0000000013287c80&gt;</span></code></pre></div>
 <p>We sample from the Box-Cox transformed density, first without, and then with, rotation of axes.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Sample on Box-Cox transformed, without rotation</span>
 x3 &lt;-<span class="st"> </span><span class="kw">ru</span>(<span class="dt">logf =</span> gpd_logpost, <span class="dt">ss =</span> ss, <span class="dt">d =</span> <span class="dv">2</span>, <span class="dt">n =</span> n, <span class="dt">trans =</span> <span class="st">&quot;BC&quot;</span>,

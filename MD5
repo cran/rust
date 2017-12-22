@@ -1,6 +1,6 @@
-48270165170df28b6a39bf0197c7501f *DESCRIPTION
+852b5798c8e694d9d86fae118a64a9a4 *DESCRIPTION
 e4c69a1fcc08c72a403c9c95dd8cbd59 *NAMESPACE
-9d09c9da762e745d1ab7f6c0cd4bb80c *NEWS.md
+d66d288fd3c8617440f20e38584ffef7 *NEWS.md
 e55f121ca49725d43530e12697531ee3 *R/RcppExports.R
 6ab0cc4ad7df4876a273b041cc1d4446 *R/box_cox_functions.R
 0d7fbeda3866781c280029dd378428d7 *R/box_cox_functions_rcpp.R
@@ -14,13 +14,13 @@ c22eedd7a4de42bbf5a15ad8d4a031d9 *R/zzz.R
 cce4716b333e6bef49ffd67e598246ac *build/vignette.rds
 31a8b37e2fd165b65b40b375a4495e76 *inst/doc/rust-using-rcpp-vignette.R
 cc567a522a45b36a3c890bd082077e26 *inst/doc/rust-using-rcpp-vignette.Rmd
-dae68690dbbf40320a86af351988d92e *inst/doc/rust-using-rcpp-vignette.html
+49de9ca9574ef72b4ae12bca02e98aab *inst/doc/rust-using-rcpp-vignette.html
 741d3050ea3802c85c4b0d44efaee061 *inst/doc/rust-vignette.R
 24f9dbd4d8623b52d4ea18f61333eadd *inst/doc/rust-vignette.Rmd
-f7d55307fbcc7adbe49f0ebdc10d9f91 *inst/doc/rust-vignette.html
+024f20f9ed0a33500642981272c570fc *inst/doc/rust-vignette.html
 2b98bcf555755d5537dd30f39e9f52cb *inst/doc/rust-when-to-use-vignette.R
 1396a89ab3288486196a740059e70f98 *inst/doc/rust-when-to-use-vignette.Rmd
-7c1b34fc34487ed47aa205e2e6bf2339 *inst/doc/rust-when-to-use-vignette.html
+2c768b143cdb9bd8abb3b9deaa4d747d *inst/doc/rust-when-to-use-vignette.html
 a345fa1390466ef1c1a63a44b9791f58 *inst/include/rust.h
 d06518224192a1db0b596392a484ea0e *inst/include/rust_RcppExports.h
 2a094b611c60858ee0fc97b73b9adc51 *man/create_log_j_xptr.Rd
