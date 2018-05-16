@@ -12,7 +12,7 @@
 
 <meta name="author" content="Paul Northrop" />
 
-<meta name="date" content="2017-12-21" />
+<meta name="date" content="2018-05-16" />
 
 <title>Rusting Faster: Simulation using Rcpp</title>
 
@@ -70,12 +70,12 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <h1 class="title toc-ignore">Rusting Faster: Simulation using Rcpp</h1>
 <h4 class="author"><em>Paul Northrop</em></h4>
-<h4 class="date"><em>2017-12-21</em></h4>
+<h4 class="date"><em>2018-05-16</em></h4>
 
 
 <div id="TOC">
 <ul>
-<li><a href="#providing-a-c-function-to-ru_rcpp">Providing a C++ function to <code id="cpp_fun">ru_rcpp</code></a></li>
+<li><a href="#cpp_fun">Providing a C++ function to <code>ru_rcpp</code></a></li>
 <li><a href="#examples-ru_rcpp">Examples : <code>ru_rcpp</code></a><ul>
 <li><a href="#standard-normal-density">Standard normal density</a></li>
 <li><a href="#mvn">Multivariate normal density</a></li>
@@ -93,8 +93,8 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <p>The <strong>rust</strong> package implements the multivariate generalized ratio-of-uniforms method of simulating random variates from a <span class="math inline">\(d\)</span>-dimensional continuous distribution. For an introduction to <em>rust</em> see the vignette <a href="rust-vignette.html">Introducing rust</a>. The user specifies (the log of) a positive target function <span class="math inline">\(f(x)\)</span> that is proportional to the density function of the distribution.</p>
 <p>This vignette describes a new feature of <strong>rust</strong>: the option for the user to provide a C++ function to evaluate the target log-density, rather than an R function. The <strong>Rcpp</strong> <span class="citation">(Eddelbuettel and Francois 2011, <span class="citation">Eddelbuettel (2013)</span>)</span> and <strong>RcppArmadillo</strong> <span class="citation">(Eddelbuettel and Sanderson 2014)</span> packages are used to speed up simulation from the target density. The improvement results from faster function evaluations and (in particular) from performing using C++ the looping in the ratio-of-uniforms algorithm. The new function <code>ru_rcpp</code> requires the target log-density to be specified using (externals pointers to) C++ functions, whereas the existing <code>ru</code> requires input R functions. Otherwise, the functionality of these two functions is the same. There are also Rcpp-based versions of functionsfor setting Box-Cox transformation parameters: <code>find_lambda_rcpp</code> and <code>find_lambda_one_d_rcpp</code></p>
 <p>In this vignette we describe in general terms the general setup of the Rcpp-based functions and use examples to illustrate their use. For more information about these examples see the vignette <a href="rust-vignette.html">Introducing rust</a></p>
-<div id="providing-a-c-function-to-ru_rcpp" class="section level2">
-<h2>Providing a C++ function to <code id="cpp_fun">ru_rcpp</code></h2>
+<div id="cpp_fun" class="section level2">
+<h2>Providing a C++ function to <code>ru_rcpp</code></h2>
 <p>The general way that <strong>rust</strong> enables users to provide their own C++ functions uses external pointers and is based on the <a href="http://gallery.rcpp.org/">Rcpp Gallery</a> article <a href="http://gallery.rcpp.org/articles/passing-cpp-function-pointers/">Passing user-supplied C++ functions</a> by Dirk Eddelbuettel. For a detailed case study of the general approach see the <strong>RcppDE</strong> package <span class="citation">(Eddelbuettel 2016)</span> vignette at the <a href="https://CRAN.R-project.org/package=RcppDE">RcppDE page on CRAN</a>.</p>
 <p>The user writes a C++ function to calculate <span class="math inline">\(\log f(x)\)</span>. The current implementation in <strong>rust</strong> requires this function to have a particular structure: it must take a constant reference to an <code>Rcpp::NumericVector</code>, say <code>x</code>, a constant reference to an <code>Rcpp::List</code>, say <code>pars</code>, and return a <code>double</code> precision scalar. <code>x</code> is the argument <span class="math inline">\(x\)</span> of <span class="math inline">\(f(x)\)</span>. <code>pars</code> is a list containing the values of parameters whose values are not specified inside the function. This allows the user to change the values of any parameters in the target density without editing the function. If there are no such parameters then the user must still include the argument <code>pars</code> in their function, even though the list provided to the function when it is called will be empty.</p>
 <p>A simple way for the user to provide their C++ functions to create them in a file, say <code>user_fns.cpp</code>. Example content is provided below. The full file is available on the <a href="https://github.com/paulnorthrop/rust/blob/master/src/user_fns.cpp">rust Github page</a>. The functions in this file are compiled and made available to R, either using the <code>Rcpp::sourceCpp</code> function (e.g. <code>Rcpp::sourceCpp(&quot;user_fns.cpp&quot;)</code>) or using RStudio’s Source button on the editor toolbar. The example content below also includes the function <code>create_xptr</code>, which creates an external pointer to a C++ function. See <a href="http://gallery.rcpp.org/articles/passing-cpp-function-pointers/">Passing user-supplied C++ functions</a>. It is this external pointer that is passed to <code>ru_rcpp</code> to perform ratio-of-uniforms sampling. If the user has written a C++ function, say <code>new_name</code>, they need to add to <code>create_xptr</code> two lines of code:</p>
@@ -156,10 +156,9 @@ ptr_N01 &lt;- create_xptr(&quot;logdN01&quot;)
 <p>All the examples in the documentation for <code>ru</code> are replicated in the documentation for <code>ru_rcpp</code>. Here we consider a subset of the examples from the <a href="rust-vignette.html">Introducing rust</a> vignette, to illustrate how to provide user-supplied C++ functions to <code>ru_rcpp</code> and to compare the performances of <code>ru</code> and <code>ru_rcpp</code>. We use the <strong>microbenchmark</strong> package <span class="citation">(Mersmann 2015)</span> to make the comparision.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(rust)
 <span class="kw">library</span>(Rcpp)
-<span class="co">#&gt; Warning: package 'Rcpp' was built under R version 3.4.3</span>
 <span class="co"># Is microbenchmark available?</span>
 got_microbenchmark &lt;-<span class="st"> </span><span class="kw">requireNamespace</span>(<span class="st">&quot;microbenchmark&quot;</span>, <span class="dt">quietly =</span> <span class="ot">TRUE</span>)
-if (got_microbenchmark) {
+<span class="cf">if</span> (got_microbenchmark) {
   <span class="kw">library</span>(microbenchmark)
 }  
 <span class="co"># Set the size of the simulated sample</span>
@@ -177,8 +176,8 @@ ptr_N01 &lt;-<span class="st"> </span><span class="kw">create_xptr</span>(<span 
 <span class="co"># Use ru and ru_rcpp starting from the same random number seed and check</span>
 <span class="co"># that the simulated values are the same.</span>
 <span class="kw">set.seed</span>(<span class="dv">47</span>)
-x_old &lt;-<span class="st"> </span><span class="kw">ru</span>(<span class="dt">logf =</span> function(x) -x ^<span class="st"> </span><span class="dv">2</span> /<span class="st"> </span><span class="dv">2</span>, <span class="dt">d =</span> <span class="dv">1</span>, <span class="dt">n =</span> n, <span class="dt">init =</span> <span class="fl">0.1</span>)
-<span class="kw">head</span>(x_old$sim_vals)
+x_old &lt;-<span class="st"> </span><span class="kw">ru</span>(<span class="dt">logf =</span> <span class="cf">function</span>(x) <span class="op">-</span>x <span class="op">^</span><span class="st"> </span><span class="dv">2</span> <span class="op">/</span><span class="st"> </span><span class="dv">2</span>, <span class="dt">d =</span> <span class="dv">1</span>, <span class="dt">n =</span> n, <span class="dt">init =</span> <span class="fl">0.1</span>)
+<span class="kw">head</span>(x_old<span class="op">$</span>sim_vals)
 <span class="co">#&gt;            [,1]</span>
 <span class="co">#&gt; [1,]  0.7764728</span>
 <span class="co">#&gt; [2,]  0.5310434</span>
@@ -188,7 +187,7 @@ x_old &lt;-<span class="st"> </span><span class="kw">ru</span>(<span class="dt">
 <span class="co">#&gt; [6,]  0.5180914</span>
 <span class="kw">set.seed</span>(<span class="dv">47</span>)
 x_new &lt;-<span class="st"> </span><span class="kw">ru_rcpp</span>(<span class="dt">logf =</span> ptr_N01, <span class="dt">d =</span> <span class="dv">1</span>, <span class="dt">n =</span> n, <span class="dt">init =</span> <span class="fl">0.1</span>)
-<span class="kw">head</span>(x_new$sim_vals)
+<span class="kw">head</span>(x_new<span class="op">$</span>sim_vals)
 <span class="co">#&gt;            [,1]</span>
 <span class="co">#&gt; [1,]  0.7764728</span>
 <span class="co">#&gt; [2,]  0.5310434</span>
@@ -198,17 +197,17 @@ x_new &lt;-<span class="st"> </span><span class="kw">ru_rcpp</span>(<span class=
 <span class="co">#&gt; [6,]  0.5180914</span>
 
 <span class="co"># Compare performances of ru and ru_rcpp</span>
-if (got_microbenchmark) {
+<span class="cf">if</span> (got_microbenchmark) {
   res &lt;-<span class="st"> </span><span class="kw">microbenchmark</span>(
-    <span class="dt">old =</span> <span class="kw">ru</span>(<span class="dt">logf =</span> function(x) -x ^<span class="st"> </span><span class="dv">2</span> /<span class="st"> </span><span class="dv">2</span>, <span class="dt">d =</span> <span class="dv">1</span>, <span class="dt">n =</span> n, <span class="dt">init =</span> <span class="fl">0.1</span>),
+    <span class="dt">old =</span> <span class="kw">ru</span>(<span class="dt">logf =</span> <span class="cf">function</span>(x) <span class="op">-</span>x <span class="op">^</span><span class="st"> </span><span class="dv">2</span> <span class="op">/</span><span class="st"> </span><span class="dv">2</span>, <span class="dt">d =</span> <span class="dv">1</span>, <span class="dt">n =</span> n, <span class="dt">init =</span> <span class="fl">0.1</span>),
     <span class="dt">new =</span> <span class="kw">ru_rcpp</span>(<span class="dt">logf =</span> ptr_N01, <span class="dt">d =</span> <span class="dv">1</span>, <span class="dt">n =</span> n, <span class="dt">init =</span> <span class="fl">0.1</span>)
   )
   <span class="kw">print</span>(res, <span class="dt">signif =</span> <span class="dv">4</span>)
 }
 <span class="co">#&gt; Unit: milliseconds</span>
-<span class="co">#&gt;  expr   min     lq      mean median     uq   max neval</span>
-<span class="co">#&gt;   old 20.53 22.750 27.515611 24.020 25.640 298.6   100</span>
-<span class="co">#&gt;   new  2.21  2.464  5.690126  2.587  2.805 300.0   100</span></code></pre></div>
+<span class="co">#&gt;  expr    min     lq   mean median     uq   max neval cld</span>
+<span class="co">#&gt;   old 18.680 20.650 24.060 21.380 22.120 289.0   100   b</span>
+<span class="co">#&gt;   new  3.544  5.128  8.279  5.493  5.875 247.7   100  a</span></code></pre></div>
 <p>As we would hope, <code>ru_rcpp</code> is faster than <code>ru</code>. If we start from the same random number seed we get the same simulated values from <code>ru</code> and <code>ru_rcpp</code>.</p>
 </div>
 <div id="mvn" class="section level3">
@@ -229,17 +228,17 @@ double logdmvnorm(const Rcpp::NumericVector&amp; x, const Rcpp::List&amp; pars) 
 <p>to the function <code>create_xptr</code> in <code>user_fns.cpp</code>.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Three-dimensional normal with positive association ----------------</span>
 rho &lt;-<span class="st"> </span><span class="fl">0.9</span>
-covmat &lt;-<span class="st"> </span><span class="kw">matrix</span>(rho, <span class="dv">3</span>, <span class="dv">3</span>) +<span class="st"> </span><span class="kw">diag</span>(<span class="dv">1</span> -<span class="st"> </span>rho, <span class="dv">3</span>)
+covmat &lt;-<span class="st"> </span><span class="kw">matrix</span>(rho, <span class="dv">3</span>, <span class="dv">3</span>) <span class="op">+</span><span class="st"> </span><span class="kw">diag</span>(<span class="dv">1</span> <span class="op">-</span><span class="st"> </span>rho, <span class="dv">3</span>)
 <span class="co"># R function</span>
-log_dmvnorm &lt;-<span class="st"> </span>function(x, <span class="dt">mean =</span> <span class="kw">rep</span>(<span class="dv">0</span>, d), <span class="dt">sigma =</span> <span class="kw">diag</span>(d)) {
+log_dmvnorm &lt;-<span class="st"> </span><span class="cf">function</span>(x, <span class="dt">mean =</span> <span class="kw">rep</span>(<span class="dv">0</span>, d), <span class="dt">sigma =</span> <span class="kw">diag</span>(d)) {
   x &lt;-<span class="st"> </span><span class="kw">matrix</span>(x, <span class="dt">ncol =</span> <span class="kw">length</span>(x))
   d &lt;-<span class="st"> </span><span class="kw">ncol</span>(x)
-  -<span class="st"> </span><span class="fl">0.5</span> *<span class="st"> </span>(x -<span class="st"> </span>mean) %*%<span class="st"> </span><span class="kw">solve</span>(sigma) %*%<span class="st"> </span><span class="kw">t</span>(x -<span class="st"> </span>mean)
+  <span class="op">-</span><span class="st"> </span><span class="fl">0.5</span> <span class="op">*</span><span class="st"> </span>(x <span class="op">-</span><span class="st"> </span>mean) <span class="op">%*%</span><span class="st"> </span><span class="kw">solve</span>(sigma) <span class="op">%*%</span><span class="st"> </span><span class="kw">t</span>(x <span class="op">-</span><span class="st"> </span>mean)
 }
 <span class="co"># Create a pointer to the logdmvnorm C++ function</span>
 ptr_mvn &lt;-<span class="st"> </span><span class="kw">create_xptr</span>(<span class="st">&quot;logdmvnorm&quot;</span>)
 
-if (got_microbenchmark) {
+<span class="cf">if</span> (got_microbenchmark) {
   res &lt;-<span class="st"> </span><span class="kw">microbenchmark</span>(
     <span class="dt">old =</span> <span class="kw">ru</span>(<span class="dt">logf =</span> log_dmvnorm, <span class="dt">sigma =</span> covmat, <span class="dt">d =</span> <span class="dv">3</span>, <span class="dt">n =</span> n,
              <span class="dt">init =</span> <span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>)), 
@@ -249,9 +248,9 @@ if (got_microbenchmark) {
   <span class="kw">print</span>(res, <span class="dt">signif =</span> <span class="dv">4</span>)
 }  
 <span class="co">#&gt; Unit: milliseconds</span>
-<span class="co">#&gt;  expr     min      lq      mean median     uq    max neval</span>
-<span class="co">#&gt;   old 207.300 224.900 252.14284 236.30 270.70 375.30   100</span>
-<span class="co">#&gt;   new   8.133   9.358  11.22801  10.12  12.04  26.34   100</span></code></pre></div>
+<span class="co">#&gt;  expr   min     lq   mean median     uq   max neval cld</span>
+<span class="co">#&gt;   old 202.7 216.90 229.60 224.20 235.30 341.3   100   b</span>
+<span class="co">#&gt;   new  14.2  15.53  18.72  16.26  17.38 120.4   100  a</span></code></pre></div>
 <p>Again, the improvement in speed obtained using Rcpp is clear.</p>
 </div>
 <div id="log-normal-density-after-box-cox-transformation" class="section level3">
@@ -269,7 +268,7 @@ double logdlnorm(const Rcpp::NumericVector&amp; x, const Rcpp::List&amp; pars) {
     return R_NegInf ;
 }</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">ptr_lnorm &lt;-<span class="st"> </span><span class="kw">create_xptr</span>(<span class="st">&quot;logdlnorm&quot;</span>)
-if (got_microbenchmark) {
+<span class="cf">if</span> (got_microbenchmark) {
   res &lt;-<span class="st"> </span><span class="kw">microbenchmark</span>(
    <span class="dt">old =</span> <span class="kw">ru</span>(<span class="dt">logf =</span> dlnorm, <span class="dt">log =</span> <span class="ot">TRUE</span>, <span class="dt">d =</span> <span class="dv">1</span>, <span class="dt">n =</span> n, <span class="dt">lower =</span> <span class="dv">0</span>, <span class="dt">init =</span> <span class="fl">0.1</span>,
             <span class="dt">trans =</span> <span class="st">&quot;BC&quot;</span>, <span class="dt">lambda =</span> <span class="dv">0</span>),
@@ -279,9 +278,9 @@ if (got_microbenchmark) {
   <span class="kw">print</span>(res, <span class="dt">signif =</span> <span class="dv">4</span>)
 }  
 <span class="co">#&gt; Unit: milliseconds</span>
-<span class="co">#&gt;  expr    min     lq      mean median     uq   max neval</span>
-<span class="co">#&gt;   old 31.840 35.300 40.516581 37.880 44.020 85.33   100</span>
-<span class="co">#&gt;   new  4.994  5.434  6.507775  5.958  7.231 12.11   100</span></code></pre></div>
+<span class="co">#&gt;  expr    min     lq   mean median     uq   max neval cld</span>
+<span class="co">#&gt;   old 29.640 32.370 33.650 33.320 34.760 40.07   100   b</span>
+<span class="co">#&gt;   new  5.878  7.828  9.268  8.536  9.087 98.93   100  a</span></code></pre></div>
 </div>
 <div id="generalized-pareto-posterior-density" class="section level3">
 <h3>Generalized Pareto posterior density</h3>
@@ -324,7 +323,7 @@ double loggp(const Rcpp::NumericVector&amp; x, const Rcpp::List&amp; ss) {
 <p>We simulate some data from a Generalized Pareto distribution, calculate summary statistics involved in the likelihood and calculate an initial value in the search for the posterior mode.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">set.seed</span>(<span class="dv">46</span>)
 <span class="co"># Sample data from a GP(sigma, xi) distribution</span>
-gpd_data &lt;-<span class="st"> </span><span class="kw">rgpd</span>(<span class="dt">m =</span> <span class="dv">100</span>, <span class="dt">xi =</span> -<span class="fl">0.5</span>, <span class="dt">sigma =</span> <span class="dv">1</span>)
+gpd_data &lt;-<span class="st"> </span><span class="kw">rgpd</span>(<span class="dt">m =</span> <span class="dv">100</span>, <span class="dt">xi =</span> <span class="op">-</span><span class="fl">0.5</span>, <span class="dt">sigma =</span> <span class="dv">1</span>)
 <span class="co"># Calculate summary statistics for use in the log-likelihood</span>
 ss &lt;-<span class="st"> </span><span class="kw">gpd_sum_stats</span>(gpd_data)
 <span class="co"># Calculate an initial estimate</span>
@@ -333,20 +332,20 @@ init &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="kw">me
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Arguments for ru_rcpp</span>
 ptr_gp &lt;-<span class="st"> </span><span class="kw">create_xptr</span>(<span class="st">&quot;loggp&quot;</span>)
 for_ru_rcpp &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="kw">list</span>(<span class="dt">logf =</span> ptr_gp, <span class="dt">init =</span> init, <span class="dt">d =</span> <span class="dv">2</span>, <span class="dt">n =</span> n,
-                 <span class="dt">lower =</span> <span class="kw">c</span>(<span class="dv">0</span>, -<span class="ot">Inf</span>)), ss)
+                 <span class="dt">lower =</span> <span class="kw">c</span>(<span class="dv">0</span>, <span class="op">-</span><span class="ot">Inf</span>)), ss)
 
-if (got_microbenchmark) {
+<span class="cf">if</span> (got_microbenchmark) {
   res &lt;-<span class="st"> </span><span class="kw">microbenchmark</span>(
    <span class="dt">old =</span> <span class="kw">ru</span>(<span class="dt">logf =</span> gpd_logpost, <span class="dt">ss =</span> ss, <span class="dt">d =</span> <span class="dv">2</span>, <span class="dt">n =</span> n, <span class="dt">init =</span> init,
-            <span class="dt">lower =</span> <span class="kw">c</span>(<span class="dv">0</span>, -<span class="ot">Inf</span>)),
+            <span class="dt">lower =</span> <span class="kw">c</span>(<span class="dv">0</span>, <span class="op">-</span><span class="ot">Inf</span>)),
    <span class="dt">new =</span> <span class="kw">do.call</span>(ru_rcpp, for_ru_rcpp)
   )
   <span class="kw">print</span>(res, <span class="dt">signif =</span> <span class="dv">4</span>)
 }  
 <span class="co">#&gt; Unit: milliseconds</span>
-<span class="co">#&gt;  expr    min     lq      mean median     uq    max neval</span>
-<span class="co">#&gt;   old 104.10 115.50 129.72167 122.40 141.10 184.30   100</span>
-<span class="co">#&gt;   new  18.35  21.14  23.77108  22.81  25.49  35.31   100</span></code></pre></div>
+<span class="co">#&gt;  expr   min     lq   mean median    uq   max neval cld</span>
+<span class="co">#&gt;   old 102.1 106.40 113.20 110.20 113.1 201.8   100   b</span>
+<span class="co">#&gt;   new  24.1  25.47  27.45  26.29  27.4 123.4   100  a</span></code></pre></div>
 </div>
 </div>
 <div id="examples-find_lambda_one_d_rcpp-and-find_lambda_rcpp" class="section level2">
@@ -387,15 +386,15 @@ lambda
 <h3>Generalized Pareto posterior density: example for <code>find_lambda_rcpp</code></h3>
 <p>In this example we supply an external pointer to a C++ function <code>phi_to_theta</code> that ensures that both parameters of the model are strictly positive, a requirement for the Box-Cox transformation to be applicable. The function <code>phi_to_theta</code> must have the same structure as the function used to calculate <span class="math inline">\(\log f\)</span>. See <a href="#cpp_fun">Providing a C++ function to <code>ru_rcpp</code></a> for details. See the <a href="rust-vignette.html">Introducing rust</a> vignette for the form of the transformation.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">temp &lt;-<span class="st"> </span><span class="kw">do.call</span>(gpd_init, ss)
-min_phi &lt;-<span class="st"> </span><span class="kw">pmax</span>(<span class="dv">0</span>, temp$init_phi -<span class="st"> </span><span class="dv">2</span> *<span class="st"> </span>temp$se_phi)
-max_phi &lt;-<span class="st"> </span><span class="kw">pmax</span>(<span class="dv">0</span>, temp$init_phi +<span class="st"> </span><span class="dv">2</span> *<span class="st"> </span>temp$se_phi)
+min_phi &lt;-<span class="st"> </span><span class="kw">pmax</span>(<span class="dv">0</span>, temp<span class="op">$</span>init_phi <span class="op">-</span><span class="st"> </span><span class="dv">2</span> <span class="op">*</span><span class="st"> </span>temp<span class="op">$</span>se_phi)
+max_phi &lt;-<span class="st"> </span><span class="kw">pmax</span>(<span class="dv">0</span>, temp<span class="op">$</span>init_phi <span class="op">+</span><span class="st"> </span><span class="dv">2</span> <span class="op">*</span><span class="st"> </span>temp<span class="op">$</span>se_phi)
 
 <span class="co"># Create external pointers</span>
 ptr_gp &lt;-<span class="st"> </span><span class="kw">create_xptr</span>(<span class="st">&quot;loggp&quot;</span>)
 ptr_phi_to_theta_gp &lt;-<span class="st"> </span><span class="kw">create_phi_to_theta_xptr</span>(<span class="st">&quot;gp&quot;</span>)
 <span class="co"># Note: log_j is set to zero by default inside find_lambda_rcpp()</span>
 lambda &lt;-<span class="st"> </span><span class="kw">find_lambda_rcpp</span>(<span class="dt">logf =</span> ptr_gp, <span class="dt">ss =</span> ss, <span class="dt">d =</span> <span class="dv">2</span>, <span class="dt">min_phi =</span> min_phi,
-                           <span class="dt">max_phi =</span> max_phi, <span class="dt">user_args =</span> <span class="kw">list</span>(<span class="dt">xm =</span> ss$xm),
+                           <span class="dt">max_phi =</span> max_phi, <span class="dt">user_args =</span> <span class="kw">list</span>(<span class="dt">xm =</span> ss<span class="op">$</span>xm),
                            <span class="dt">phi_to_theta =</span> ptr_phi_to_theta_gp)
 lambda
 <span class="co">#&gt; $lambda</span>
@@ -412,10 +411,10 @@ lambda
 <span class="co">#&gt; 0.12670792 0.02477219 </span>
 <span class="co">#&gt; </span>
 <span class="co">#&gt; $phi_to_theta</span>
-<span class="co">#&gt; &lt;pointer: 0x00000000143e2bc0&gt;</span>
+<span class="co">#&gt; &lt;pointer: 0x0000000008db6d80&gt;</span>
 <span class="co">#&gt; </span>
 <span class="co">#&gt; $log_j</span>
-<span class="co">#&gt; &lt;pointer: 0x00000000143e2b20&gt;</span>
+<span class="co">#&gt; &lt;pointer: 0x0000000008db6c10&gt;</span>
 <span class="co">#&gt; </span>
 <span class="co">#&gt; $user_args</span>
 <span class="co">#&gt; $user_args$xm</span>
