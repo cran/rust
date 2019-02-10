@@ -6,9 +6,9 @@
 C++ via Rcpp}
 \usage{
 find_lambda_one_d_rcpp(logf, ..., ep_bc = 1e-04, min_phi = ep_bc,
-  max_phi = 10, num = 1001L, xdiv = 100, probs = seq(0.01, 0.99, by =
-  0.01), lambda_range = c(-3, 3), phi_to_theta = NULL, log_j = NULL,
-  user_args = list())
+  max_phi = 10, num = 1001L, xdiv = 100, probs = seq(0.01, 0.99, by
+  = 0.01), lambda_range = c(-3, 3), phi_to_theta = NULL,
+  log_j = NULL, user_args = list())
 }
 \arguments{
 \item{logf}{A pointer to a compiled C++ function returning the log
@@ -143,11 +143,11 @@ plot(x, ru_scale = TRUE)
 \references{
 Box, G. and Cox, D. R. (1964) An Analysis of Transformations.
  Journal of the Royal Statistical Society. Series B (Methodological), 26(2),
- 211-252, \url{http://www.jstor.org/stable/2984418}.
+ 211-252, \url{https://www.jstor.org/stable/2984418}.
 
 Andrews, D. F. and Gnanadesikan, R. and Warner, J. L. (1971)
  Transformations of Multivariate Data, Biometrics, 27(4),
- \url{http://dx.doi.org/10.2307/2528821}.
+ \url{https://dx.doi.org/10.2307/2528821}.
 
 Eddelbuettel, D. and Francois, R. (2011). Rcpp: Seamless
  R and C++ Integration. \emph{Journal of Statistical Software},

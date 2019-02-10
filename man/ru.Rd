@@ -6,13 +6,13 @@
 \usage{
 ru(logf, ..., n = 1, d = 1, init = NULL, trans = c("none", "BC",
   "user"), phi_to_theta = NULL, log_j = NULL, user_args = list(),
-  lambda = rep(1L, d), lambda_tol = 1e-06, gm = NULL, rotate = ifelse(d
-  == 1, FALSE, TRUE), lower = rep(-Inf, d), upper = rep(Inf, d), r = 1/2,
-  ep = 0L, a_algor = if (d == 1) "nlminb" else "optim",
-  b_algor = c("nlminb", "optim"), a_method = c("Nelder-Mead", "BFGS", "CG",
-  "L-BFGS-B", "SANN", "Brent"), b_method = c("Nelder-Mead", "BFGS", "CG",
-  "L-BFGS-B", "SANN", "Brent"), a_control = list(), b_control = list(),
-  var_names = NULL)
+  lambda = rep(1L, d), lambda_tol = 1e-06, gm = NULL,
+  rotate = ifelse(d == 1, FALSE, TRUE), lower = rep(-Inf, d),
+  upper = rep(Inf, d), r = 1/2, ep = 0L, a_algor = if (d == 1)
+  "nlminb" else "optim", b_algor = c("nlminb", "optim"),
+  a_method = c("Nelder-Mead", "BFGS", "CG", "L-BFGS-B", "SANN", "Brent"),
+  b_method = c("Nelder-Mead", "BFGS", "CG", "L-BFGS-B", "SANN", "Brent"),
+  a_control = list(), b_control = list(), var_names = NULL)
 }
 \arguments{
 \item{logf}{A function returning the log of the target density \eqn{f}.
@@ -176,7 +176,7 @@ If \code{trans = "none"} and \code{rotate = FALSE} then \code{ru}
   If \code{d} is greater than one and \code{rotate = TRUE} then a rotation
   of the variable axes is performed \emph{after} mode relocation.  The
   rotation is based on the Choleski decomposition (see \link{chol}) of the
-  estimated Hessian (computed using \code{\link[stats]{optimHess}}
+  estimated Hessian (computed using \code{\link[stats:optim]{optimHess}}
   of the negated
   log-density after any user-supplied transformation or Box-Cox
   transformation.  If any of the eigenvalues of the estimated Hessian are
@@ -387,7 +387,7 @@ Wakefield, J. C., Gelfand, A. E. and Smith, A. F. M. (1991)
 \code{\link[stats]{nlminb}} for choices of the arguments
   \code{a_control} and \code{b_control}.
 
-\code{\link[stats]{optimHess}} for Hessian estimation.
+\code{\link[stats:optim]{optimHess}} for Hessian estimation.
 
 \code{\link[base]{chol}} for the Choleski decomposition.
 }

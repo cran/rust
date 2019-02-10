@@ -107,7 +107,7 @@
 #'   If \code{d} is greater than one and \code{rotate = TRUE} then a rotation
 #'   of the variable axes is performed \emph{after} mode relocation.  The
 #'   rotation is based on the Choleski decomposition (see \link{chol}) of the
-#'   estimated Hessian (computed using \code{\link[stats]{optimHess}}
+#'   estimated Hessian (computed using \code{\link[stats:optim]{optimHess}}
 #'   of the negated
 #'   log-density after any user-supplied transformation or Box-Cox
 #'   transformation.  If any of the eigenvalues of the estimated Hessian are
@@ -339,7 +339,7 @@
 #'   \code{a_method}, \code{b_method}, \code{a_control} and \code{b_control}.
 #' @seealso \code{\link[stats]{nlminb}} for choices of the arguments
 #'   \code{a_control} and \code{b_control}.
-#' @seealso \code{\link[stats]{optimHess}} for Hessian estimation.
+#' @seealso \code{\link[stats:optim]{optimHess}} for Hessian estimation.
 #' @seealso \code{\link[base]{chol}} for the Choleski decomposition.
 #'
 #' @export
@@ -769,7 +769,10 @@ find_a <-  function(neg_logf_rho, init_psi, d, r, lower, upper, algor,
       # Sometimes Nelder-Mead fails if the initial estimate is too good.
       # ... so avoid non-zero convergence indicator by using L-BFGS-B instead.
       if (temp$convergence == 10) {
-        temp <- stats::optim(par = temp$par, fn = a_obj_no_inf, ...,
+        # Start a little away from the optimum, to avoid erroneous
+        # convergence warnings, using init_psi as a benchmark
+        new_start <- (init_psi + 9 * temp$par) / 10
+        temp <- stats::optim(par = new_start, fn = a_obj_no_inf, ...,
                              control = control, hessian = FALSE,
                              method = "L-BFGS-B", lower = lower, upper = upper)
       }
@@ -777,8 +780,8 @@ find_a <-  function(neg_logf_rho, init_psi, d, r, lower, upper, algor,
       # limit without the convergence criteria being satisfied.  Then try
       # nlminb as a further check, but don't use the control argument in
       # case of conflict between optim() and nlminb().
-      if (temp$convergence == 1) {
-        temp <- stats::nlminb(start = temp$par, objective = a_obj, ...,
+      if (temp$convergence > 0) {
+        temp <- stats::nlminb(start = new_start, objective = a_obj, ...,
                               lower = lower, upper = upper)
       }
     }
@@ -794,11 +797,12 @@ find_a <-  function(neg_logf_rho, init_psi, d, r, lower, upper, algor,
                         lower = lower, upper = upper, control = control)
   # Sometimes nlminb isn't sure that it has found the minimum when in fact
   # it has.  Try to check this, and avoid a non-zero convergence indicator
-  # by using optim with method="L-BFGS-B", starting from nlminb's solution,
+  # by using optim with method="L-BFGS-B", again starting from new_start,
   # but don't use the control argument in case of conflict between
   # optim() and nlminb().
   if (temp$convergence > 0) {
-    temp <- stats::optim(par = temp$par, fn = a_obj_no_inf, ...,
+    new_start <- (init_psi + 9 * temp$par) / 10
+    temp <- stats::optim(par = new_start, fn = a_obj_no_inf, ...,
                          hessian = FALSE, method = "L-BFGS-B", lower = lower,
                          upper = upper)
   }
