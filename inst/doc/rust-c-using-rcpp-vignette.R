@@ -1,4 +1,4 @@
-## ---- include = FALSE----------------------------------------------------
+## ---- include = FALSE---------------------------------------------------------
 knitr::opts_chunk$set(comment = "#>", collapse = TRUE)
 
 required <- c("revdbayes")
@@ -6,7 +6,7 @@ required <- c("revdbayes")
 if (!all(unlist(lapply(required, function(pkg) requireNamespace(pkg, quietly = TRUE)))))
   knitr::opts_chunk$set(eval = FALSE)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 library(rust)
 library(Rcpp)
 # Is microbenchmark available?
@@ -17,7 +17,7 @@ if (got_microbenchmark) {
 # Set the size of the simulated sample
 n <- 1000
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 # Normal density ===================
 
 # Create a pointer to the logdN01 C++ function
@@ -42,7 +42,7 @@ if (got_microbenchmark) {
   print(res, signif = 4)
 }
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 # Three-dimensional normal with positive association ----------------
 rho <- 0.9
 covmat <- matrix(rho, 3, 3) + diag(1 - rho, 3)
@@ -65,7 +65,7 @@ if (got_microbenchmark) {
   print(res, signif = 4)
 }  
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 ptr_lnorm <- create_xptr("logdlnorm")
 if (got_microbenchmark) {
   res <- microbenchmark(
@@ -77,7 +77,7 @@ if (got_microbenchmark) {
   print(res, signif = 4)
 }  
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 set.seed(46)
 # Sample data from a GP(sigma, xi) distribution
 gpd_data <- rgpd(m = 100, xi = -0.5, sigma = 1)
@@ -86,7 +86,7 @@ ss <- gpd_sum_stats(gpd_data)
 # Calculate an initial estimate
 init <- c(mean(gpd_data), 0)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 # Arguments for ru_rcpp
 ptr_gp <- create_xptr("loggp")
 for_ru_rcpp <- c(list(logf = ptr_gp, init = init, d = 2, n = n,
@@ -101,7 +101,7 @@ if (got_microbenchmark) {
   print(res, signif = 4)
 }  
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 alpha <- 1
 max_phi <- qgamma(0.999, shape = alpha)
 ptr_gam <- create_xptr("logdgamma")
@@ -109,7 +109,7 @@ lambda <- find_lambda_one_d_rcpp(logf = ptr_gam, alpha = alpha,
                                  max_phi = max_phi)
 lambda
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 temp <- do.call(gpd_init, ss)
 min_phi <- pmax(0, temp$init_phi - 2 * temp$se_phi)
 max_phi <- pmax(0, temp$init_phi + 2 * temp$se_phi)

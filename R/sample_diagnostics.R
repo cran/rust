@@ -39,12 +39,12 @@
 #' # Log-normal density ----------------
 #' x <- ru(logf = dlnorm, log = TRUE, d = 1, n = 1000, lower = 0, init = 1)
 #'
-#' \dontrun{
+#' \donttest{
 #' plot(x)
 #' }
 #'
 #' # Improve appearance using arguments to plot() and hist()
-#' \dontrun{
+#' \donttest{
 #' plot(x, breaks = seq(0, ceiling(max(x$sim_vals)), by = 0.25),
 #'   xlim = c(0, 10))
 #' }
@@ -59,7 +59,7 @@
 #' }
 #' x <- ru(logf = log_dmvnorm, sigma = covmat, d = 2, n = 1000, init = c(0, 0))
 #'
-#' \dontrun{
+#' \donttest{
 #' plot(x)
 #' }
 #' @seealso \code{\link{summary.ru}} for summaries of the simulated values
@@ -190,8 +190,8 @@ plot.ru <- function(x, y, ..., n = ifelse(x$d == 1, 1001, 101),
         ylabs <- rep(NA, x$d)
       }
     }
-    def.par <- graphics::par(no.readonly = TRUE)
-    graphics::par(mfrow = c(rows, cols))
+    oldpar <- graphics::par(mfrow = c(rows, cols))
+    on.exit(graphics::par(oldpar))
     pairwise_plots <- function(x) {
       for (i in 1:(ncol(x) - 1)) {
         for (j in (i + 1):ncol(x)) {
@@ -202,7 +202,6 @@ plot.ru <- function(x, y, ..., n = ifelse(x$d == 1, 1001, 101),
       }
     }
     pairwise_plots(plot_data)
-    graphics::par(def.par)
   }
 }
 

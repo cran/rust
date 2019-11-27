@@ -1,3 +1,17 @@
+# rust 1.3.7
+
+## Bug fixes and minor improvements
+
+* An extra argument `shoof` has been added to `ru()` and `ru_rcpp()` to enable the user to have control over the initial value used to check that a non-zero convergence indicator is indeed spurious.
+
+* Functions that are not intended to be called by the user have been moved to rust-internal.R
+
+* Use `inherits()` to check the class of objects returned from `try()`, rather than `class()`.
+
+* Hyperlinks corrected in vignettes.
+
+* pkgdown documentation at https://paulnorthrop.github.io/rust/
+
 # rust 1.3.6
 
 ## Bug fixes and minor improvements

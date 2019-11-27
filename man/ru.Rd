@@ -4,15 +4,33 @@
 \alias{ru}
 \title{Generalized ratio-of-uniforms sampling}
 \usage{
-ru(logf, ..., n = 1, d = 1, init = NULL, trans = c("none", "BC",
-  "user"), phi_to_theta = NULL, log_j = NULL, user_args = list(),
-  lambda = rep(1L, d), lambda_tol = 1e-06, gm = NULL,
-  rotate = ifelse(d == 1, FALSE, TRUE), lower = rep(-Inf, d),
-  upper = rep(Inf, d), r = 1/2, ep = 0L, a_algor = if (d == 1)
-  "nlminb" else "optim", b_algor = c("nlminb", "optim"),
+ru(
+  logf,
+  ...,
+  n = 1,
+  d = 1,
+  init = NULL,
+  trans = c("none", "BC", "user"),
+  phi_to_theta = NULL,
+  log_j = NULL,
+  user_args = list(),
+  lambda = rep(1L, d),
+  lambda_tol = 1e-06,
+  gm = NULL,
+  rotate = ifelse(d == 1, FALSE, TRUE),
+  lower = rep(-Inf, d),
+  upper = rep(Inf, d),
+  r = 1/2,
+  ep = 0L,
+  a_algor = if (d == 1) "nlminb" else "optim",
+  b_algor = c("nlminb", "optim"),
   a_method = c("Nelder-Mead", "BFGS", "CG", "L-BFGS-B", "SANN", "Brent"),
   b_method = c("Nelder-Mead", "BFGS", "CG", "L-BFGS-B", "SANN", "Brent"),
-  a_control = list(), b_control = list(), var_names = NULL)
+  a_control = list(),
+  b_control = list(),
+  var_names = NULL,
+  shoof = 0.2
+)
 }
 \arguments{
 \item{logf}{A function returning the log of the target density \eqn{f}.
@@ -113,6 +131,20 @@ is the chosen algorithm.  If \code{d} = 1 then \code{a_method} and
 
 \item{var_names}{A character vector.  Names to give to the column(s) of
 the simulated values.}
+
+\item{shoof}{A numeric scalar in [0, 1].  Sometimes a spurious
+non-zero convergence indicator is returned from
+\code{\link[stats]{optim}} or \code{\link[stats]{nlminb}}).
+In this event we try to check that a minimum has indeed been found using
+different algorithm.  \code{shoof} controls the starting value provided
+to this algorithm.
+If \code{shoof = 0} then we start from the current solution.
+If \code{shoof = 1} then we start from the initial estimate provided
+to the previous minimisation.  Otherwise, \code{shoof} interpolates
+between these two extremes, with a value close to zero giving a starting
+value that is close to the current solution.
+The exception to this is when the initial and current solutions are equal.
+Then we start from the current solution multiplied by \code{1 - shoof}.}
 }
 \value{
 An object of class "ru" is a list containing the following
@@ -189,7 +221,7 @@ If \code{trans = "none"} and \code{rotate = FALSE} then \code{ru}
   likely to be close to optimal in many cases, particularly if
   \code{trans = "BC"}.
 
-See \code{vignette("rust-vignette", package = "rust")} for full details.
+See \code{vignette("rust-a-vignette", package = "rust")} for full details.
 }
 \examples{
 # Normal density ===================
@@ -280,7 +312,7 @@ x <- ru(logf = dgamma, shape = alpha, log = TRUE, d = 1, n = 1000,
         user_args = list(lambda = lambda), init = alpha)
 summary(x)
 
-\dontrun{
+\donttest{
 # Generalized Pareto posterior distribution ===================
 
 # Sample data from a GP(sigma, xi) distribution

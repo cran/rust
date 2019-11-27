@@ -124,7 +124,7 @@
 #' lambda
 #' x <- ru_rcpp(logf = ptr_gam, alpha = alpha, d = 1, n = 1000, trans = "BC",
 #'              lambda = lambda)
-#' \dontrun{
+#' \donttest{
 #' plot(x)
 #' plot(x, ru_scale = TRUE)
 #' }
@@ -362,7 +362,7 @@ find_lambda_one_d_rcpp <- function(logf, ..., ep_bc = 1e-4, min_phi = ep_bc,
 #' x <- ru_rcpp(logf = ptr_gam, alpha = alpha, d = 1, n = 1000, trans = "BC",
 #'              lambda = lambda)
 #'
-#' \dontrun{
+#' \donttest{
 #' # Generalized Pareto posterior distribution ===================
 #'
 #' # Sample data from a GP(sigma, xi) distribution
@@ -438,7 +438,7 @@ find_lambda_one_d_rcpp <- function(logf, ..., ep_bc = 1e-4, min_phi = ep_bc,
 #'   main = "Box-Cox and mode relocation")
 #' plot(x4, xlab = "sigma", ylab = "xi", ru_scale = TRUE,
 #'   main = "Box-Cox, mode relocation and rotation")
-#' par(def_par)
+#' graphics::par(def_par)
 #' }
 #' @seealso \code{\link{ru_rcpp}} to perform ratio-of-uniforms sampling.
 #' @seealso \code{\link{find_lambda_one_d_rcpp}} to produce (somewhat)

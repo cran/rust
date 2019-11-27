@@ -7,19 +7,20 @@
 <meta charset="utf-8" />
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <meta name="author" content="Paul Northrop" />
 
-<meta name="date" content="2019-02-09" />
+<meta name="date" content="2019-11-27" />
 
 <title>When can rust be used?</title>
 
 
 
 <style type="text/css">code{white-space: pre;}</style>
-<style type="text/css">
+<style type="text/css" data-origin="pandoc">
 div.sourceCode { overflow-x: auto; }
 table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
   margin: 0; padding: 0; vertical-align: baseline; border: none; }
@@ -55,11 +56,36 @@ code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
 code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
 code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
 code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+
 </style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
 
 
 
 <link href="data:text/css;charset=utf-8,body%20%7B%0Abackground%2Dcolor%3A%20%23fff%3B%0Amargin%3A%201em%20auto%3B%0Amax%2Dwidth%3A%20700px%3B%0Aoverflow%3A%20visible%3B%0Apadding%2Dleft%3A%202em%3B%0Apadding%2Dright%3A%202em%3B%0Afont%2Dfamily%3A%20%22Open%20Sans%22%2C%20%22Helvetica%20Neue%22%2C%20Helvetica%2C%20Arial%2C%20sans%2Dserif%3B%0Afont%2Dsize%3A%2014px%3B%0Aline%2Dheight%3A%201%2E35%3B%0A%7D%0A%23header%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0A%23TOC%20%7B%0Aclear%3A%20both%3B%0Amargin%3A%200%200%2010px%2010px%3B%0Apadding%3A%204px%3B%0Awidth%3A%20400px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Aborder%2Dradius%3A%205px%3B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Afont%2Dsize%3A%2013px%3B%0Aline%2Dheight%3A%201%2E3%3B%0A%7D%0A%23TOC%20%2Etoctitle%20%7B%0Afont%2Dweight%3A%20bold%3B%0Afont%2Dsize%3A%2015px%3B%0Amargin%2Dleft%3A%205px%3B%0A%7D%0A%23TOC%20ul%20%7B%0Apadding%2Dleft%3A%2040px%3B%0Amargin%2Dleft%3A%20%2D1%2E5em%3B%0Amargin%2Dtop%3A%205px%3B%0Amargin%2Dbottom%3A%205px%3B%0A%7D%0A%23TOC%20ul%20ul%20%7B%0Amargin%2Dleft%3A%20%2D2em%3B%0A%7D%0A%23TOC%20li%20%7B%0Aline%2Dheight%3A%2016px%3B%0A%7D%0Atable%20%7B%0Amargin%3A%201em%20auto%3B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dcolor%3A%20%23DDDDDD%3B%0Aborder%2Dstyle%3A%20outset%3B%0Aborder%2Dcollapse%3A%20collapse%3B%0A%7D%0Atable%20th%20%7B%0Aborder%2Dwidth%3A%202px%3B%0Apadding%3A%205px%3B%0Aborder%2Dstyle%3A%20inset%3B%0A%7D%0Atable%20td%20%7B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dstyle%3A%20inset%3B%0Aline%2Dheight%3A%2018px%3B%0Apadding%3A%205px%205px%3B%0A%7D%0Atable%2C%20table%20th%2C%20table%20td%20%7B%0Aborder%2Dleft%2Dstyle%3A%20none%3B%0Aborder%2Dright%2Dstyle%3A%20none%3B%0A%7D%0Atable%20thead%2C%20table%20tr%2Eeven%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Ap%20%7B%0Amargin%3A%200%2E5em%200%3B%0A%7D%0Ablockquote%20%7B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Apadding%3A%200%2E25em%200%2E75em%3B%0A%7D%0Ahr%20%7B%0Aborder%2Dstyle%3A%20solid%3B%0Aborder%3A%20none%3B%0Aborder%2Dtop%3A%201px%20solid%20%23777%3B%0Amargin%3A%2028px%200%3B%0A%7D%0Adl%20%7B%0Amargin%2Dleft%3A%200%3B%0A%7D%0Adl%20dd%20%7B%0Amargin%2Dbottom%3A%2013px%3B%0Amargin%2Dleft%3A%2013px%3B%0A%7D%0Adl%20dt%20%7B%0Afont%2Dweight%3A%20bold%3B%0A%7D%0Aul%20%7B%0Amargin%2Dtop%3A%200%3B%0A%7D%0Aul%20li%20%7B%0Alist%2Dstyle%3A%20circle%20outside%3B%0A%7D%0Aul%20ul%20%7B%0Amargin%2Dbottom%3A%200%3B%0A%7D%0Apre%2C%20code%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0Aborder%2Dradius%3A%203px%3B%0Acolor%3A%20%23333%3B%0Awhite%2Dspace%3A%20pre%2Dwrap%3B%20%0A%7D%0Apre%20%7B%0Aborder%2Dradius%3A%203px%3B%0Amargin%3A%205px%200px%2010px%200px%3B%0Apadding%3A%2010px%3B%0A%7D%0Apre%3Anot%28%5Bclass%5D%29%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Acode%20%7B%0Afont%2Dfamily%3A%20Consolas%2C%20Monaco%2C%20%27Courier%20New%27%2C%20monospace%3B%0Afont%2Dsize%3A%2085%25%3B%0A%7D%0Ap%20%3E%20code%2C%20li%20%3E%20code%20%7B%0Apadding%3A%202px%200px%3B%0A%7D%0Adiv%2Efigure%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0Aimg%20%7B%0Abackground%2Dcolor%3A%20%23FFFFFF%3B%0Apadding%3A%202px%3B%0Aborder%3A%201px%20solid%20%23DDDDDD%3B%0Aborder%2Dradius%3A%203px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Amargin%3A%200%205px%3B%0A%7D%0Ah1%20%7B%0Amargin%2Dtop%3A%200%3B%0Afont%2Dsize%3A%2035px%3B%0Aline%2Dheight%3A%2040px%3B%0A%7D%0Ah2%20%7B%0Aborder%2Dbottom%3A%204px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Apadding%2Dbottom%3A%202px%3B%0Afont%2Dsize%3A%20145%25%3B%0A%7D%0Ah3%20%7B%0Aborder%2Dbottom%3A%202px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Afont%2Dsize%3A%20120%25%3B%0A%7D%0Ah4%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23f7f7f7%3B%0Amargin%2Dleft%3A%208px%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Ah5%2C%20h6%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23ccc%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Aa%20%7B%0Acolor%3A%20%230033dd%3B%0Atext%2Ddecoration%3A%20none%3B%0A%7D%0Aa%3Ahover%20%7B%0Acolor%3A%20%236666ff%3B%20%7D%0Aa%3Avisited%20%7B%0Acolor%3A%20%23800080%3B%20%7D%0Aa%3Avisited%3Ahover%20%7B%0Acolor%3A%20%23BB00BB%3B%20%7D%0Aa%5Bhref%5E%3D%22http%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0Aa%5Bhref%5E%3D%22https%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0A%0Acode%20%3E%20span%2Ekw%20%7B%20color%3A%20%23555%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Edt%20%7B%20color%3A%20%23902000%3B%20%7D%20%0Acode%20%3E%20span%2Edv%20%7B%20color%3A%20%2340a070%3B%20%7D%20%0Acode%20%3E%20span%2Ebn%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Efl%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Ech%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Est%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Eco%20%7B%20color%3A%20%23888888%3B%20font%2Dstyle%3A%20italic%3B%20%7D%20%0Acode%20%3E%20span%2Eot%20%7B%20color%3A%20%23007020%3B%20%7D%20%0Acode%20%3E%20span%2Eal%20%7B%20color%3A%20%23ff0000%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Efu%20%7B%20color%3A%20%23900%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%20code%20%3E%20span%2Eer%20%7B%20color%3A%20%23a61717%3B%20background%2Dcolor%3A%20%23e3d2d2%3B%20%7D%20%0A" rel="stylesheet" type="text/css" />
+
+
+
 
 </head>
 
@@ -69,8 +95,8 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 
 <h1 class="title toc-ignore">When can rust be used?</h1>
-<h4 class="author"><em>Paul Northrop</em></h4>
-<h4 class="date"><em>2019-02-09</em></h4>
+<h4 class="author">Paul Northrop</h4>
+<h4 class="date">2019-11-27</h4>
 
 
 <div id="TOC">
@@ -86,7 +112,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 </ul>
 </div>
 
-<p>The generalized ratio-of-uniforms can be used to simulate from a wide range of <span class="math inline">\(d\)</span>-dimensional multivariate probability densities, provided that <span class="math inline">\(d\)</span> is not so large that its efficiency is prohibitively low (see the vignette <a href="rust-vignette.html">Introducing rust</a>). However, there are conditions that the target density <span class="math inline">\(f\)</span> must satisfy for this method to be applicable. This vignette considers instances when these conditions do <em>not</em> hold and suggests strategies that may overcome this difficulty. Although the ratio-of-uniforms method can be used to simulate from multimodal densities, currently <strong>rust</strong> is designed to work effectively with unimodal densities. This vignette illustrates this using a simple 1-dimensional example.</p>
+<p>The generalized ratio-of-uniforms can be used to simulate from a wide range of <span class="math inline">\(d\)</span>-dimensional multivariate probability densities, provided that <span class="math inline">\(d\)</span> is not so large that its efficiency is prohibitively low (see the vignette <a href="rust-a-vignette.html">Introducing rust</a>). However, there are conditions that the target density <span class="math inline">\(f\)</span> must satisfy for this method to be applicable. This vignette considers instances when these conditions do <em>not</em> hold and suggests strategies that may overcome this difficulty. Although the ratio-of-uniforms method can be used to simulate from multimodal densities, currently <strong>rust</strong> is designed to work effectively with unimodal densities. This vignette illustrates this using a simple 1-dimensional example.</p>
 <div id="conditions-on-f" class="section level2">
 <h2>Conditions on <span class="math inline">\(f\)</span></h2>
 <p>The generalized ratio-of-uniforms method is an acceptance-rejection type of algorithm. It can only be applied to densities for which its acceptance region can be enclosed within a bounding region of finite volume from which it is simple to simulate, usually a cuboidal bounding box. For a <span class="math inline">\(d\)</span>-dimensional density <span class="math inline">\(f(x)\)</span> the bounding box (if it exists) is the <span class="math inline">\((d+1)\)</span>-dimensional set <span class="math inline">\(\{ 0 &lt; u \leq a(r), \, b_i^-(r) \leq v_i \leq b_i^+(r), \, i = 1, \ldots, d \}\)</span>, where <span class="math display">\[
@@ -95,7 +121,7 @@ a(r) &amp;=&amp; \sup_\chi \, f(x)^{1 / (r d + 1)}, \\
 b_i^-(r) &amp;=&amp; \inf_{\chi_i^-} \, x_i \, f(x)^{r / (r d + 1)}, \\  
 b_i^+(r) &amp;=&amp; \sup_{\chi_i^+} \, x_i \, f(x)^{r / (r d + 1)},  
 \end{eqnarray}
-\]</span> <span class="math inline">\(x =(x_1, \ldots, x_d)\)</span>, <span class="math inline">\(\chi \subseteq \mathbb{R}^d\)</span>, <span class="math inline">\(\chi_i^- = \{ x \in \chi, x_i \leq 0 \}\)</span> and <span class="math inline">\(\chi_i^+ = \{ x \in \chi, x_i \geq 0 \}\)</span>. See the vignette <a href="rust-vignette.html">Introducing rust</a> for more details.</p>
+\]</span> <span class="math inline">\(x =(x_1, \ldots, x_d)\)</span>, <span class="math inline">\(\chi \subseteq \mathbb{R}^d\)</span>, <span class="math inline">\(\chi_i^- = \{ x \in \chi, x_i \leq 0 \}\)</span> and <span class="math inline">\(\chi_i^+ = \{ x \in \chi, x_i \geq 0 \}\)</span>. See the vignette <a href="rust-a-vignette.html">Introducing rust</a> for more details.</p>
 <p>For a given value of the non-negative tuning parameter <span class="math inline">\(r\)</span> we need <span class="math inline">\(f(x)\)</span> and <span class="math inline">\(x_i ^ {r d + 1} f(x) ^ r, i = 1, \ldots, d\)</span> to be bounded. If <span class="math inline">\(f(x)\)</span> is unbounded then we could use a transformation of variable to obtain a density that <em>is</em> bounded. For bounded <span class="math inline">\(f(x)\)</span> one or more of <span class="math inline">\(x_i ^ {r d + 1} f(x) ^ r, i = 1, \ldots, d\)</span> can be unbounded if <span class="math inline">\(f(x)\)</span> has heavy-tails. Again, we could use a transformation of variable to avoid this problem. For this issue the value of <span class="math inline">\(r\)</span> matters and we may be able to achieve boundedness if a sufficiently large value of <span class="math inline">\(r\)</span> is used. In <strong>rust</strong> <span class="math inline">\(r = 1/2\)</span> is used by default because this is optimal in the Gaussian case. For heavy-tailed densities <span class="math inline">\(r\)</span> needs to be larger, perhaps larger than 1. We consider these strategies in the next two sections.</p>
 </div>
 <div id="unbounded-densities" class="section level2">
@@ -115,7 +141,7 @@ gam &lt;-<span class="st"> </span><span class="kw">ru_rcpp</span>(<span class="d
 <span class="kw">plot</span>(gam, <span class="dt">xlab =</span> <span class="st">&quot;x&quot;</span>)
 <span class="kw">plot</span>(gam, <span class="dt">ru_scale =</span> <span class="ot">TRUE</span>, <span class="dt">xlab =</span> <span class="st">&quot;y&quot;</span>)</code></pre></div>
 <p><img src="data:image/png;base64,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" /><img src="data:image/png;base64,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" /></p>
-<p>Here we have used <code>find_lambda_one_d_rcpp</code> and <code>ru_rcpp</code> (see the vignette <a href="rust-using-rcpp-vignette.html">Rusting faster: Speedy Simulation using Rcpp</a>) but we could equally have used <code>ru</code> and <code>find_lambda_one_d</code>: this example appears in the help file for <code>find_lambda_one_d</code>.</p>
+<p>Here we have used <code>find_lambda_one_d_rcpp</code> and <code>ru_rcpp</code> (see the vignette <a href="rust-c-using-rcpp-vignette.html">Rusting faster: Speedy Simulation using Rcpp</a>) but we could equally have used <code>ru</code> and <code>find_lambda_one_d</code>: this example appears in the help file for <code>find_lambda_one_d</code>.</p>
 </div>
 <div id="heavy-tailed-densities" class="section level2">
 <h2>Heavy-tailed densities</h2>
@@ -125,18 +151,12 @@ gam &lt;-<span class="st"> </span><span class="kw">ru_rcpp</span>(<span class="d
 <p>Suppose that <span class="math inline">\(X\)</span> has a standard Cauchy density, that is <span class="math inline">\(f(x) \propto (1 + x^2)^{-1}, -\infty &lt; x &lt; \infty\)</span>. The bounding box cannot be constructed if <span class="math inline">\(r &lt; 1\)</span>. For <span class="math inline">\(r = 1\)</span> the bounding box parameters <span class="math inline">\(b_1^-(r) = -1\)</span> and <span class="math inline">\(b_1^+(r) = 1\)</span> are attained in the limits as <span class="math inline">\(x\)</span> decreases/increases to infinity respectively. This is fine in theory but using <span class="math inline">\(r &gt; 1\)</span> avoids this problem and the largest probability of acceptance is obtained for <span class="math inline">\(r \approx 1.26\)</span>. Below are the estimated bounding boxes and probabilities of acceptance for <span class="math inline">\(r = 1\)</span> (left) and <span class="math inline">\(r = 1.26\)</span> (right).</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">ptr_c &lt;-<span class="st"> </span><span class="kw">create_xptr</span>(<span class="st">&quot;logcauchy&quot;</span>)
 cauchy1 &lt;-<span class="st"> </span><span class="kw">ru_rcpp</span>(<span class="dt">logf =</span> ptr_c, <span class="dt">log =</span> <span class="ot">TRUE</span>, <span class="dt">init =</span> <span class="dv">0</span>, <span class="dt">r =</span> <span class="dv">1</span>, <span class="dt">n =</span> <span class="dv">1000</span>)
-<span class="co">#&gt; Warning in ru_rcpp(logf = ptr_c, log = TRUE, init = 0, r = 1, n = 1000):</span>
-<span class="co">#&gt; One or more convergence indicators are non-zero.</span>
-<span class="co">#&gt;                box     vals1 conv</span>
-<span class="co">#&gt; a        1.0000000     0.000    0</span>
-<span class="co">#&gt; b1minus -0.9999999 -3136.747   52</span>
-<span class="co">#&gt; b1plus   0.9999999  3136.747   52</span>
 cauchy126 &lt;-<span class="st"> </span><span class="kw">ru_rcpp</span>(<span class="dt">logf =</span> ptr_c, <span class="dt">log =</span> <span class="ot">TRUE</span>, <span class="dt">init =</span> <span class="dv">0</span>, <span class="dt">r =</span> <span class="fl">1.26</span>, <span class="dt">n =</span> <span class="dv">1000</span>)
 <span class="kw">cbind</span>(cauchy1<span class="op">$</span>box, cauchy126<span class="op">$</span>box)
 <span class="co">#&gt;                box     vals1 conv        box     vals1 conv</span>
 <span class="co">#&gt; a        1.0000000     0.000    0  1.0000000  0.000000    0</span>
-<span class="co">#&gt; b1minus -0.9999999 -3136.747   52 -0.8310221 -2.948272    0</span>
-<span class="co">#&gt; b1plus   0.9999999  3136.747   52  0.8310221  2.948272    0</span>
+<span class="co">#&gt; b1minus -0.9999999 -2509.398    0 -0.8310221 -2.948272    0</span>
+<span class="co">#&gt; b1plus   0.9999999  2509.398    0  0.8310221  2.948272    0</span>
 <span class="kw">c</span>(cauchy1<span class="op">$</span>pa, cauchy126<span class="op">$</span>pa)
 <span class="co">#&gt; [1] 0.8064516 0.8368201</span></code></pre></div>
 <p>For <span class="math inline">\(r = 1\)</span> the algorithm finds essentially the correct values of <span class="math inline">\(b_1^-\)</span> and <span class="math inline">\(b_1^+\)</span> even though these do not occur at a turning point of the objective functions. The estimated probability of acceptance is indeed larger for <span class="math inline">\(r = 1.26\)</span>.</p>
@@ -227,6 +247,9 @@ res4 &lt;-<span class="st"> </span><span class="kw">ru</span>(<span class="dt">l
 </div>
 </div>
 
+
+
+<!-- code folding -->
 
 
 <!-- dynamically load mathjax for compatibility with self-contained -->

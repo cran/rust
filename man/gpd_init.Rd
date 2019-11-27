@@ -4,8 +4,7 @@
 \alias{gpd_init}
 \title{Initial estimates for Generalized Pareto parameters}
 \usage{
-gpd_init(gpd_data, m, xm, sum_gp = NULL, xi_eq_zero = FALSE,
-  init_ests = NULL)
+gpd_init(gpd_data, m, xm, sum_gp = NULL, xi_eq_zero = FALSE, init_ests = NULL)
 }
 \arguments{
 \item{gpd_data}{A numeric vector containing positive sample values.}
@@ -73,7 +72,7 @@ The main aim is to calculate an admissible estimate of theta,
   estimate sigma conditional on this.
 }
 \examples{
-\dontrun{
+\donttest{
 # Sample data from a GP(sigma, xi) distribution
 gpd_data <- rgpd(m = 100, xi = 0, sigma = 1)
 # Calculate summary statistics for use in the log-likelihood

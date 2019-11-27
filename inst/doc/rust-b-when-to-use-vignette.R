@@ -1,4 +1,4 @@
-## ---- include = FALSE----------------------------------------------------
+## ---- include = FALSE---------------------------------------------------------
 knitr::opts_chunk$set(comment = "#>", collapse = TRUE)
 
 required <- c("bang")
@@ -6,7 +6,7 @@ required <- c("bang")
 if (!all(unlist(lapply(required, function(pkg) requireNamespace(pkg, quietly = TRUE)))))
   knitr::opts_chunk$set(eval = FALSE)
 
-## ---- fig.show='hold'----------------------------------------------------
+## ---- fig.show='hold'---------------------------------------------------------
 library(rust)
 alpha <- 0.1
 max_phi <- qgamma(0.999, shape = alpha)
@@ -20,14 +20,14 @@ gam <- ru_rcpp(logf = ptr_gam, alpha = alpha, d = 1, n = 1000, trans = "BC",
 plot(gam, xlab = "x")
 plot(gam, ru_scale = TRUE, xlab = "y")
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 ptr_c <- create_xptr("logcauchy")
 cauchy1 <- ru_rcpp(logf = ptr_c, log = TRUE, init = 0, r = 1, n = 1000)
 cauchy126 <- ru_rcpp(logf = ptr_c, log = TRUE, init = 0, r = 1.26, n = 1000)
 cbind(cauchy1$box, cauchy126$box)
 c(cauchy1$pa, cauchy126$pa)
 
-## ---- fig.show='hold'----------------------------------------------------
+## ---- fig.show='hold'---------------------------------------------------------
 library(bang)
 coag1 <- hanova1(resp = coagulation[, 1], fac = coagulation[, 2], n = 10000)
 coag2 <- hanova1(resp = coagulation[, 1], fac = coagulation[, 2], n = 10000,
@@ -38,11 +38,11 @@ all2 <- cbind(coag2$theta_sim_vals, coag2$sim_vals)
 round(t(apply(all1, 2, quantile, probs = probs)), 1)
 round(t(apply(all2, 2, quantile, probs = probs)), 1)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 coag1$pa
 coag2$pa
 
-## ---- fig.show='hold'----------------------------------------------------
+## ---- fig.show='hold'---------------------------------------------------------
 normal_mixture <- function(x, mu, p) {
   return(log(p * dnorm(x) + (1 - p) * dnorm(x, mean = mu)))
 }

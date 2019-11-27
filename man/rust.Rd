@@ -3,7 +3,6 @@
 \docType{package}
 \name{rust}
 \alias{rust}
-\alias{rust-package}
 \title{rust: Ratio-of-Uniforms Simulation with Transformation}
 \description{
 Uses the multivariate generalized ratio-of-uniforms method to simulate from a
@@ -22,7 +21,7 @@ The main functions in the rust package are \code{\link{ru}} and
   \code{find_lambda_rcpp} and \code{find_lambda_one_d_rcpp}
   Basic \code{plot} and \code{summary} methods are also provided.
 
-See \code{vignette("rust-vignette", package = "rust")} for an overview of
+See \code{vignette("rust-a-vignette", package = "rust")} for an overview of
 the package.
 }
 \references{

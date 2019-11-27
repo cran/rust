@@ -4,10 +4,21 @@
 \alias{find_lambda_rcpp}
 \title{Selecting Box-Cox parameter lambda for general d using C++ via Rcpp.}
 \usage{
-find_lambda_rcpp(logf, ..., d = 1, n_grid = NULL, ep_bc = 1e-04,
-  min_phi = rep(ep_bc, d), max_phi = rep(10, d), which_lam = 1:d,
-  lambda_range = c(-3, 3), init_lambda = NULL, phi_to_theta = NULL,
-  log_j = NULL, user_args = list())
+find_lambda_rcpp(
+  logf,
+  ...,
+  d = 1,
+  n_grid = NULL,
+  ep_bc = 1e-04,
+  min_phi = rep(ep_bc, d),
+  max_phi = rep(10, d),
+  which_lam = 1:d,
+  lambda_range = c(-3, 3),
+  init_lambda = NULL,
+  phi_to_theta = NULL,
+  log_j = NULL,
+  user_args = list()
+)
 }
 \arguments{
 \item{logf}{A pointer to a compiled C++ function returning the log
@@ -112,7 +123,7 @@ lambda
 x <- ru_rcpp(logf = ptr_gam, alpha = alpha, d = 1, n = 1000, trans = "BC",
              lambda = lambda)
 
-\dontrun{
+\donttest{
 # Generalized Pareto posterior distribution ===================
 
 # Sample data from a GP(sigma, xi) distribution
@@ -188,7 +199,7 @@ plot(x3, xlab = "sigma", ylab = "xi", ru_scale = TRUE,
   main = "Box-Cox and mode relocation")
 plot(x4, xlab = "sigma", ylab = "xi", ru_scale = TRUE,
   main = "Box-Cox, mode relocation and rotation")
-par(def_par)
+graphics::par(def_par)
 }
 }
 \references{

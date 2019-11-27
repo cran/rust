@@ -12,7 +12,7 @@
 #' @param logf An external pointer to a compiled C++ function returning the
 #'   log of the target density \eqn{f}.
 #'   This function should return \code{-Inf} when the density is zero.
-#'   See the \code{vignette("rust-using-rcpp-vignette", package = "rust")},
+#'   See the \code{vignette("rust-c-using-rcpp-vignette", package = "rust")},
 #'   particularly the Section
 #'   \strong{Providing a C++ function to \code{ru_rcpp}}, for details.
 #' @param ... Further arguments to be passed to \code{logf} and related
@@ -93,6 +93,19 @@
 #'   \code{nlminb} to find a(r) and (bi-(r), bi+(r)) respectively.
 #' @param var_names A character vector.  Names to give to the column(s) of
 #'   the simulated values.
+#' @param shoof A numeric scalar in [0, 1].  Sometimes a spurious
+#'   non-zero convergence indicator is returned from
+#'   \code{\link[stats]{optim}} or \code{\link[stats]{nlminb}}).
+#'   In this event we try to check that a minimum has indeed been found using
+#'   different algorithm.  \code{shoof} controls the starting value provided
+#'   to this algorithm.
+#'   If \code{shoof = 0} then we start from the current solution.
+#'   If \code{shoof = 1} then we start from the initial estimate provided
+#'   to the previous minimisation.  Otherwise, \code{shoof} interpolates
+#'   between these two extremes, with a value close to zero giving a starting
+#'   value that is close to the current solution.
+#'   The exception to this is when the initial and current solutions are equal.
+#'   Then we start from the current solution multiplied by \code{1 - shoof}.
 #' @details If \code{trans = "none"} and \code{rotate = FALSE} then \code{ru}
 #'   implements the (multivariate) generalized ratio of uniforms method
 #'   described in Wakefield, Gelfand and Smith (1991) using a target
@@ -128,8 +141,8 @@
 #'   likely to be close to optimal in many cases, particularly if
 #'   \code{trans = "BC"}.
 #'
-#' See \code{vignette("rust-using-rcpp-vignette", package = "rust")} and
-#' \code{vignette("rust-vignette", package = "rust")} for full details.
+#' See \code{vignette("rust-b-using-rcpp-vignette", package = "rust")} and
+#' \code{vignette("rust-a-vignette", package = "rust")} for full details.
 #'
 #' @return An object of class "ru" is a list containing the following
 #'   components:
@@ -272,7 +285,7 @@
 #'   user_args = list(lambda = lambda), init = alpha)
 #' summary(x)
 #'
-#' \dontrun{
+#' \donttest{
 #' # Generalized Pareto posterior distribution ===================
 #'
 #' # Sample data from a GP(sigma, xi) distribution
@@ -378,7 +391,12 @@ ru_rcpp <- function(logf, ..., n = 1, d = 1, init = NULL,
                             "Brent"),
                b_method = c("Nelder-Mead", "BFGS", "CG", "L-BFGS-B", "SANN",
                             "Brent"),
-               a_control = list(), b_control = list(), var_names = NULL) {
+               a_control = list(), b_control = list(), var_names = NULL,
+               shoof = 0.2) {
+  # Check that shoof is in [0, 1]
+  if (shoof < 0 || shoof > 1) {
+    stop("''shoof'' must be in [0, 1]")
+  }
   # Check that logf is an external pointer.
   is_pointer <- (class(logf) == "externalptr")
   if (!is_pointer) {
@@ -658,7 +676,8 @@ ru_rcpp <- function(logf, ..., n = 1, d = 1, init = NULL,
   ru_args <- c(ru_args, logf_args)
   for_find_a <- list(init_psi = init_psi, lower = lower, upper = upper,
                      algor = a_algor, method = a_method, control = a_control,
-                     a_obj_fun = a_obj_fun, ru_args = ru_args)
+                     a_obj_fun = a_obj_fun, ru_args = ru_args,
+                     shoof = shoof)
   temp <- do.call("cpp_find_a", for_find_a)
   #
   # Check that logf is finite at 0
@@ -679,7 +698,7 @@ ru_rcpp <- function(logf, ..., n = 1, d = 1, init = NULL,
   vals[1, ] <- rep(0, d)
   conv[1] <- temp$convergence
   pos_def <- TRUE
-  if (class(temp$hessian) == "try-error") {
+  if (inherits(temp$hessian, "try-error")) {
     pos_def <- FALSE
   } else {
     hess_mat <- temp$hessian
@@ -743,7 +762,8 @@ ru_rcpp <- function(logf, ..., n = 1, d = 1, init = NULL,
                       conv = conv,
                       algor = b_algor, method = b_method, control = b_control,
                       lower_box_fun = lower_box_fun,
-                      upper_box_fun = upper_box_fun, ru_args = ru_args)
+                      upper_box_fun = upper_box_fun, ru_args = ru_args,
+                      shoof = shoof)
   temp <- do.call("cpp_find_bs", for_find_bs)
   vals <- temp$vals
   conv <- temp$conv
@@ -782,283 +802,4 @@ ru_rcpp <- function(logf, ..., n = 1, d = 1, init = NULL,
   res$f_mode <- f_mode
   class(res) <- "ru"
   return(res)
-}
-
-# =========================== cpp_find_a ===========================
-
-
-cpp_find_a <-  function(init_psi, lower, upper, algor, method, control,
-                        a_obj_fun, ru_args) {
-  #
-  # Finds the value of a(r).
-  #
-  # Args:
-  #   init_psi  : A numeric scalar.  Initial value of psi.
-  #   lower     : A numeric vector.  Lower bounds on the arguments of logf.
-  #   upper     : A numeric vector.  Upper bounds on the arguments of logf.
-  #   algor     : A character scalar.  Algorithm ("optim" or "nlminb").
-  #   method    : A character scalar.  Only relevant if algorithm = "optim".
-  #   control   : A numeric list.  Control arguments to algor.
-  #   a_obj_fun : The function to be minimized to find a(r).
-  #   ru_args   : A numeric list, containing:
-  #     d         : A numeric scalar. Dimension of f.
-  #     r         : A numeric scalar. Generalized ratio-of-uniforms parameter.
-  #     psi_mode  : A numeric vector.  Latterly this will contain the estimated
-  #                 mode of the target density after transformation but prior
-  #                 to mode relation. Equal to rep(0, d) at this stage.
-  #     rot_mat   : A numeric matrix.  Latterly this will contain the rotation
-  #                 matrix.  Equal to diag(d) at this stage.
-  #     hscale    : A numeric scalar.  Scales the target log-density.
-  #                 Equal to logf evaluated at init at this stage.
-  #     which_lam : A vector of integers indication which components of lambda
-  #                 are Box-Cox transformed. Only present if trans = "BC".
-  #     lambda    : Box-Cox transformation parameters.
-  #                 Only present if trans = "BC".
-  #     gm        : Box-Cox scale parameters.  Only present if trans = "BC".
-  #     con       : lambda * gm ^(lambda - 1).  Only present if trans = "BC".
-  #     logf      : A pointer to the (original) target log-density function.
-  #     pars      : A numeric list of additional arguments to logf.
-  #
-  # Returns: a list containing
-  #   the standard returns from optim or nlminb
-  #   hessian: the estimated hessian of -cpp_logf_rho/(d*r+1) at its minimum.
-  #
-  big_val <- 10 ^ 10
-  #
-  if (algor == "optim") {
-    if (method == "L-BFGS-B" | method == "Brent") {
-      add_args <- list(par = init_psi, fn = a_obj_fun, method = method,
-                       control = control, lower = lower, upper = upper,
-                       big_val = big_val)
-      temp <- do.call(stats::optim, c(ru_args, add_args))
-    } else {
-      add_args <- list(par = init_psi, fn = a_obj_fun, method = method,
-                       control = control, big_val = Inf)
-      temp <- do.call(stats::optim, c(ru_args, add_args))
-      # Sometimes Nelder-Mead fails if the initial estimate is too good.
-      # ... so avoid non-zero convergence indicator using L-BFGS-B instead.
-      if (temp$convergence == 10) {
-        # Start a little away from the optimum, to avoid erroneous
-        # convergence warnings, using init_psi as a benchmark
-        new_start <- (init_psi + 9 * temp$par) / 10
-        add_args <- list(par = new_start, fn = a_obj_fun, method = "L-BFGS-B",
-                         control = control, big_val = big_val,
-                         lower = lower, upper = upper)
-        temp <- do.call(stats::optim, c(ru_args, add_args))
-      }
-      # In some cases optim with method = "L-BFGS-B" may reach it's iteration
-      # limit without the convergence criteria being satisfied.  Then try
-      # nlminb as a further check, but don't use the control argument in
-      # case of conflict between optim() and nlminb().
-      if (temp$convergence > 0) {
-        add_args <- list(start = new_start, objective = a_obj_fun,
-                         lower = lower, upper = upper, big_val = Inf)
-        temp <- do.call(stats::nlminb, c(ru_args, add_args))
-      }
-    }
-  } else {
-    add_args <- list(start = init_psi, objective = a_obj_fun,
-                     control = control, lower = lower, upper = upper,
-                     big_val = Inf)
-    temp <- do.call(stats::nlminb, c(ru_args, add_args))
-    # Sometimes nlminb isn't sure that it has found the minimum when in fact
-    # it has.  Try to check this, and avoid a non-zero convergence indicator
-    # by using optim with method="L-BFGS-B", again starting from new_start.
-    if (temp$convergence > 0) {
-      new_start <- (init_psi + 9 * temp$par) / 10
-      add_args <- list(par = new_start, fn = a_obj_fun, hessian = FALSE,
-                       method = "L-BFGS-B", big_val = big_val,
-                       lower = lower, upper = upper)
-      temp <- do.call(stats::optim, c(ru_args, add_args))
-    }
-  }
-  # Try to calculate Hessian, but avoid problems if an error is produced.
-  # An error may occur if the MAP estimate is very close to a parameter
-  # boundary.
-  add_args <- list(par = temp$par, fn = a_obj_fun, big_val = Inf)
-  temp$hessian <- try(do.call(stats::optimHess, c(ru_args, add_args)),
-                      silent = TRUE)
-  return(temp)
-}
-
-# =========================== cpp_find_bs ===========================
-
-cpp_find_bs <-  function(lower, upper, ep, vals, conv, algor, method,
-                         control, lower_box_fun, upper_box_fun, ru_args) {
-  # Finds the values of b-(r) and b+(r).
-  #
-  # Args:
-  #   lower         : A numeric vector.  Lower bounds on the arguments of logf.
-  #   upper         : A numeric vector.  Upper bounds on the arguments of logf.
-  #   ep            : A numeric scalar.  Controls initial estimates for
-  #                   optimizations to find the b-bounding box parameters.
-  #                   The default (ep=0) corresponds to starting at the mode of
-  #                   logf small positive values of ep move the constrained
-  #                   variable slightly away from the mode in the correct
-  #                   direction.  If ep is negative its absolute value is used,
-  #                   with no warning given.
-  #   vals          : A numeric matrix.  Will contain the values of the
-  #                   variables at which the ru box dimensions occur.
-  #                   Row 1 already contains the values for a(r).
-  #   conv          : A numeric scalar.  Will contain the covergence
-  #                   indicators returned by the optimisation algorithms.
-  #                   Row 1 already contains the values for a(r).
-  #   algor         : A character scalar. Algorithm ("optim" or "nlminb").
-  #   method        : A character scalar.  Only relevant if algor = "optim".
-  #   control       : A numeric list. Control arguments to algor.
-  #   lower_box_fun : The function to be minimized to find b-(r).
-  #   upper_box_fun : The function to be minimized to find b+(r).
-  #   ru_args       : A numeric list, containing:
-  #     d         : A numeric scalar. Dimension of f.
-  #     r         : A numeric scalar. Generalized ratio-of-uniforms parameter.
-  #     psi_mode  : A numeric vector.  The estimated mode of the target
-  #                 density after transformation but prior to mode relocation.
-  #     rot_mat   : A numeric matrix.  Rotation matrix (equal to the identity
-  #                 matrix if rotate = FALSE).
-  #     hscale    : A numeric scalar.  Scales the target log-density.
-  #     which_lam : A vector of integers indication which components of lambda
-  #                 are Box-Cox transformed. Only present if trans = "BC".
-  #     lambda    : Box-Cox transformation parameters.
-  #                 Only present if trans = "BC".
-  #     gm        : Box-Cox scale parameters.  Only present if trans = "BC".
-  #     con       : lambda * gm ^(lambda - 1).  Only present if trans = "BC".
-  #     logf      : A pointer to the (original) target log-density function.
-  #     pars      : A numeric list of additional arguments to logf.
-  #
-  # Returns: a list containing
-  #   l_box : A numeric vector.  Values of biminus(r), i = 1, ...d.
-  #   u_box : A numeric vector.  Values of biplus(r), i = 1, ...d.
-  #   vals  : as described above in Args.
-  #   conv  : as described above in Args.
-  #
-  big_val <- 10 ^ 10
-  f_mode <- ru_args$psi_mode
-  d <- ru_args$d
-  #
-  l_box <- u_box <- NULL
-  zeros <- rep(0, d)
-  #
-  # Find biminus(r) and biplus(s), i = 1, ...,d.
-  #
-  for (j in 1:d) {
-    #
-    # Find biminus(r) ----------
-    #
-    rho_init <- zeros
-    rho_init[j] <- -ep
-    t_upper <- upper - f_mode
-    t_upper[j] <- 0
-    if (algor == "nlminb") {
-      add_args <- list(start = rho_init, objective = lower_box_fun,
-                       upper = t_upper, lower = lower - f_mode, j = j - 1,
-                       control = control, big_val = Inf)
-      temp <- do.call(stats::nlminb, c(ru_args, add_args))
-      l_box[j] <- temp$objective
-      # Sometimes nlminb isn't sure that it has found the minimum when in fact
-      # it has.  Try to check this, and avoid a non-zero convergence indicator
-      # by using optim with method="L-BFGS-B", starting from nlminb's solution.
-      if (temp$convergence > 0) {
-        add_args <- list(par = temp$par, fn = lower_box_fun, j = j - 1,
-                         method = "L-BFGS-B", big_val = big_val,
-                         upper = t_upper, lower = lower - f_mode)
-        temp <- do.call(stats::optim, c(ru_args, add_args))
-        l_box[j] <- temp$value
-      }
-    }
-    if (algor == "optim") {
-      # L-BFGS-B and Brent don't like Inf or NA
-      if (method == "L-BFGS-B" | method == "Brent") {
-        add_args <- list(par = rho_init, fn = lower_box_fun, upper = t_upper,
-                         lower = lower - f_mode, j = j - 1, control = control,
-                         method = method, big_val = big_val)
-        temp <- do.call(stats::optim, c(ru_args, add_args))
-        l_box[j] <- temp$value
-      } else {
-        add_args <- list(par = rho_init, fn = lower_box_fun, j = j - 1,
-                         control = control, method = method, big_val = Inf)
-        temp <- do.call(stats::optim, c(ru_args, add_args))
-        l_box[j] <- temp$value
-        # Sometimes Nelder-Mead fails if the initial estimate is too good.
-        # ... so avoid non-zero convergence indicator using L-BFGS-B instead.
-        if (temp$convergence == 10) {
-          add_args <- list(par = temp$par, fn = lower_box_fun, j = j - 1,
-                           control = control, method = "L-BFGS-B",
-                           big_val = big_val, upper = t_upper,
-                           lower = lower - f_mode)
-          temp <- do.call(stats::optim, c(ru_args, add_args))
-          l_box[j] <- temp$value
-        }
-        # Check using nlminb() if optim's iteration limit is reached.
-        if (temp$convergence == 1) {
-          add_args <- list(start = temp$par, objective = lower_box_fun,
-                           upper = t_upper, lower = lower - f_mode, j = j - 1,
-                           big_val = Inf)
-          temp <- do.call(stats::nlminb, c(ru_args, add_args))
-          l_box[j] <- temp$objective
-        }
-      }
-    }
-    vals[j+1, ] <- temp$par
-    conv[j+1] <- temp$convergence
-    #
-    # Find biplus(r) --------------
-    #
-    rho_init <- zeros
-    rho_init[j] <- ep
-    t_lower <- lower - f_mode
-    t_lower[j] <- 0
-    if (algor == "nlminb") {
-      add_args <- list(start = rho_init, objective = upper_box_fun,
-                       lower = t_lower, upper = upper - f_mode, j = j - 1,
-                       control = control, big_val = Inf)
-      temp <- do.call(stats::nlminb, c(ru_args, add_args))
-      u_box[j] <- -temp$objective
-      # Sometimes nlminb isn't sure that it has found the minimum when in fact
-      # it has.  Try to check this, and avoid a non-zero convergence indicator
-      # by using optim with method="L-BFGS-B", starting from nlminb's solution.
-      if (temp$convergence > 0) {
-        add_args <- list(par = temp$par, fn = upper_box_fun, j = j - 1,
-                         method = "L-BFGS-B", big_val = big_val,
-                         lower = t_lower, upper = upper - f_mode)
-        temp <- do.call(stats::optim, c(ru_args, add_args))
-        u_box[j] <- -temp$value
-      }
-    }
-    if (algor == "optim") {
-      # L-BFGS-B and Brent don't like Inf or NA
-      if (method == "L-BFGS-B" | method == "Brent") {
-        add_args <- list(par = rho_init, fn = upper_box_fun,
-                         lower = t_lower, upper = upper - f_mode, j = j - 1,
-                         control = control, method = method, big_val = big_val)
-        temp <- do.call(stats::optim, c(ru_args, add_args))
-        u_box[j] <- -temp$value
-      } else {
-        add_args <- list(par = rho_init, fn = upper_box_fun, j = j - 1,
-                         control = control, method = method, big_val = Inf)
-        temp <- do.call(stats::optim, c(ru_args, add_args))
-        u_box[j] <- -temp$value
-        # Sometimes Nelder-Mead fails if the initial estimate is too good.
-        # ... so avoid non-zero convergence indicator using L-BFGS-B instead.
-        if (temp$convergence == 10) {
-          add_args <- list(par = temp$par, fn = upper_box_fun, j = j - 1,
-                           control = control, method = "L-BFGS-B",
-                           big_val = big_val, lower = t_lower,
-                           upper = upper - f_mode)
-          temp <- do.call(stats::optim, c(ru_args, add_args))
-          u_box[j] <- -temp$value
-        }
-        # Check using nlminb() if optim's iteration limit is reached.
-        if (temp$convergence == 1) {
-          add_args <- list(start = rho_init, objective = upper_box_fun,
-                           lower = t_lower, upper = upper - f_mode, j = j - 1,
-                           big_val = Inf)
-          temp <- do.call(stats::nlminb, c(ru_args, add_args))
-          u_box[j] <- -temp$objective
-        }
-      }
-    }
-    vals[j+d+1, ] <- temp$par
-    conv[j+d+1] <- temp$convergence
-  }
-  return(list(l_box = l_box, u_box = u_box, vals = vals, conv = conv))
 }

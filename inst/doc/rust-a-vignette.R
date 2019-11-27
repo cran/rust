@@ -1,4 +1,4 @@
-## ---- include = FALSE----------------------------------------------------
+## ---- include = FALSE---------------------------------------------------------
 knitr::opts_chunk$set(comment = "#>", collapse = TRUE)
 
 required <- c("revdbayes")
@@ -6,14 +6,14 @@ required <- c("revdbayes")
 if (!all(unlist(lapply(required, function(pkg) requireNamespace(pkg, quietly = TRUE)))))
   knitr::opts_chunk$set(eval = FALSE)
 
-## ---- echo=FALSE, results='asis'-----------------------------------------
+## ---- echo=FALSE, results='asis'----------------------------------------------
 d <- 1:6
 pa <- (pi * exp(1)) ^ (d /2) / (2 ^ d * (1 + d / 2) ^ (1 + d /2))
 pa <- matrix(pa, ncol = length(d), nrow = 1)
 colnames(pa) <- d
 knitr::kable(round(pa,3), caption = "$p_a(d, 1/2)$ as $d$ varies.")
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 library(rust)
 set.seed(46)
 # Sample data from a GP(sigma, xi) distribution
@@ -23,7 +23,7 @@ ss <- gpd_sum_stats(gpd_data)
 # Calculate an initial estimate
 init <- c(mean(gpd_data), 0)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 n <- 10000
 # Mode relocation only ----------------
 x1 <- ru(logf = gpd_logpost, ss = ss, d = 2, n = n, init = init,
@@ -33,7 +33,7 @@ x1 <- ru(logf = gpd_logpost, ss = ss, d = 2, n = n, init = init,
 x2 <- ru(logf = gpd_logpost, ss = ss, d = 2, n = n, init = init,
   lower = c(0, -Inf))
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 # Find initial estimates for phi = (phi1, phi2),
 # where phi1 = sigma
 #   and phi2 = xi + sigma / max(x),
@@ -53,12 +53,12 @@ max_phi <- pmax(0, temp$init_phi + 2 * temp$se_phi)
 phi_to_theta <- function(phi) c(phi[1], phi[2] - phi[1] / ss$xm)
 log_j <- function(x) 0
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 lambda <- find_lambda(logf = gpd_logpost, ss = ss, d = 2, min_phi = min_phi,
   max_phi = max_phi, phi_to_theta = phi_to_theta, log_j = log_j)
 lambda
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 # Sample on Box-Cox transformed, without rotation
 x3 <- ru(logf = gpd_logpost, ss = ss, d = 2, n = n, trans = "BC",
   lambda = lambda, rotate = FALSE)
@@ -67,7 +67,7 @@ x3 <- ru(logf = gpd_logpost, ss = ss, d = 2, n = n, trans = "BC",
 x4 <- ru(logf = gpd_logpost, ss = ss, d = 2, n = n, trans = "BC",
   lambda = lambda, var_names = c("sigma", "xi"))
 
-## ---- fig.show='hold'----------------------------------------------------
+## ---- fig.show='hold'---------------------------------------------------------
 plot(x1, ru_scale = TRUE, cex.main = 0.75, cex.lab = 0.75, 
   main = paste("mode relocation \n pa = ", round(x1$pa, 3)))
 plot(x2, ru_scale = TRUE, cex.main = 0.75, cex.lab = 0.75, 
@@ -77,13 +77,13 @@ plot(x3, ru_scale = TRUE, cex.main = 0.75, cex.lab = 0.75,
 plot(x4, ru_scale = TRUE, cex.main = 0.75, cex.lab = 0.75,
   main = paste("Box-Cox, mode relocation and rotation \n pa = ", round(x4$pa, 3)))
 
-## ---- fig.align='center'-------------------------------------------------
+## ---- fig.align='center'------------------------------------------------------
 plot(x4, xlab = "sigma", ylab = "xi")
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 summary(x4)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 # Sampling on original scale ----------------
 x1 <- ru(logf = dlnorm, log = TRUE, d = 1, n = n, lower = 0, init = 1)
 x1$pa
@@ -95,39 +95,39 @@ x2 <- ru(logf = dlnorm, log = TRUE, d = 1, n = n, init = 0.1, trans = "BC",
          lambda = lambda)
 x2$pa
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 # Equivalently, we could use trans = "user" and supply the (inverse) Box-Cox
 # transformation and the log-Jacobian by hand
 x3 <- ru(logf = dlnorm, log = TRUE, d = 1, n = n, init = 0.1, trans = "user",
         phi_to_theta = function(x) exp(x), log_j = function(x) -log(x))
 x3$pa
 
-## ---- fig.show='hold'----------------------------------------------------
+## ---- fig.show='hold'---------------------------------------------------------
 plot(x3, ru_scale = TRUE, xlab = "z")
 plot(x1, xlab = "x")
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 # Note: the default value of max_phi = 10 is OK here but this will not always be the case.
 lambda <- find_lambda_one_d(logf = dlnorm, log = TRUE)
 lambda
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 x4 <- ru(logf = dlnorm, log = TRUE, d = 1, n = n, trans = "BC", lambda = lambda)
 x4$pa
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 alpha <- 1
 x1 <- ru(logf = dgamma, shape = alpha, log = TRUE, d = 1, n = n, lower = 0,
        init = alpha)
 x1$pa
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 # Box-Cox transform with lambda = 1/3 works well for shape >= 1. -----------
 x2 <- ru(logf = dgamma, shape = alpha, log = TRUE, d = 1, n = n, trans = "BC",
        lambda = 1/3, init = alpha)
 x2$pa
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 # Equivalently, we could use trans = "user" and supply the (inverse) Box-Cox
 # transformation and the log-Jacobian by hand
 # Note: when phi_to_theta is undefined at x this function returns NA
@@ -141,7 +141,7 @@ x3 <- ru(logf = dgamma, shape = alpha, log = TRUE, d = 1, n = n, trans = "user",
        init = alpha)
 x3$pa
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 alpha <- 0.1
 # Choose a sensible value of max_phi
 max_phi <- qgamma(0.999, shape = alpha)
@@ -156,11 +156,11 @@ x4 <- ru(logf = dgamma, shape = alpha, log = TRUE, d = 1, n = n, trans = "BC",
   lambda = lambda)
 x4$pa
 
-## ---- fig.show='hold'----------------------------------------------------
+## ---- fig.show='hold'---------------------------------------------------------
 plot(x4)
 plot(x4, ru_scale = TRUE)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 # two-dimensional normal with positive association ----------------
 rho <- 0.9
 covmat <- matrix(c(1, rho, rho, 1), 2, 2)
@@ -176,11 +176,11 @@ x1 <- ru(logf = log_dmvnorm, sigma = covmat, d = 2, n = n, init = c(0, 0),
 x2 <- ru(logf = log_dmvnorm, sigma = covmat, d = 2, n = n, init = c(0, 0))
 c(x1$pa, x2$pa)
 
-## ---- fig.show='hold'----------------------------------------------------
+## ---- fig.show='hold'---------------------------------------------------------
 plot(x1, ru_scale = TRUE)
 plot(x2, ru_scale = TRUE)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 # three-dimensional normal with positive association ----------------
 covmat <- matrix(rho, 3, 3) + diag(1 - rho, 3)
 # No rotation.  Slow !
@@ -191,7 +191,7 @@ x4 <- ru(logf = log_dmvnorm, sigma = covmat, d = 3, n = n,
   init = c(0, 0, 0))
 c(x3$pa, x4$pa)
 
-## ---- fig.width = 7------------------------------------------------------
+## ---- fig.width = 7-----------------------------------------------------------
 plot(x3, ru_scale = TRUE)
 plot(x4, ru_scale = TRUE)
 

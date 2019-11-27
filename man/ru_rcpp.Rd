@@ -4,21 +4,39 @@
 \alias{ru_rcpp}
 \title{Generalized ratio-of-uniforms sampling using C++ via Rcpp}
 \usage{
-ru_rcpp(logf, ..., n = 1, d = 1, init = NULL, trans = c("none",
-  "BC", "user"), phi_to_theta = NULL, log_j = NULL,
-  user_args = list(), lambda = rep(1L, d), lambda_tol = 1e-06,
-  gm = NULL, rotate = ifelse(d == 1, FALSE, TRUE), lower = rep(-Inf,
-  d), upper = rep(Inf, d), r = 1/2, ep = 0L, a_algor = if (d == 1)
-  "nlminb" else "optim", b_algor = c("nlminb", "optim"),
+ru_rcpp(
+  logf,
+  ...,
+  n = 1,
+  d = 1,
+  init = NULL,
+  trans = c("none", "BC", "user"),
+  phi_to_theta = NULL,
+  log_j = NULL,
+  user_args = list(),
+  lambda = rep(1L, d),
+  lambda_tol = 1e-06,
+  gm = NULL,
+  rotate = ifelse(d == 1, FALSE, TRUE),
+  lower = rep(-Inf, d),
+  upper = rep(Inf, d),
+  r = 1/2,
+  ep = 0L,
+  a_algor = if (d == 1) "nlminb" else "optim",
+  b_algor = c("nlminb", "optim"),
   a_method = c("Nelder-Mead", "BFGS", "CG", "L-BFGS-B", "SANN", "Brent"),
   b_method = c("Nelder-Mead", "BFGS", "CG", "L-BFGS-B", "SANN", "Brent"),
-  a_control = list(), b_control = list(), var_names = NULL)
+  a_control = list(),
+  b_control = list(),
+  var_names = NULL,
+  shoof = 0.2
+)
 }
 \arguments{
 \item{logf}{An external pointer to a compiled C++ function returning the
 log of the target density \eqn{f}.
 This function should return \code{-Inf} when the density is zero.
-See the \code{vignette("rust-using-rcpp-vignette", package = "rust")},
+See the \code{vignette("rust-c-using-rcpp-vignette", package = "rust")},
 particularly the Section
 \strong{Providing a C++ function to \code{ru_rcpp}}, for details.}
 
@@ -118,6 +136,20 @@ is the chosen algorithm.  If \code{d} = 1 then \code{a_method} and
 
 \item{var_names}{A character vector.  Names to give to the column(s) of
 the simulated values.}
+
+\item{shoof}{A numeric scalar in [0, 1].  Sometimes a spurious
+non-zero convergence indicator is returned from
+\code{\link[stats]{optim}} or \code{\link[stats]{nlminb}}).
+In this event we try to check that a minimum has indeed been found using
+different algorithm.  \code{shoof} controls the starting value provided
+to this algorithm.
+If \code{shoof = 0} then we start from the current solution.
+If \code{shoof = 1} then we start from the initial estimate provided
+to the previous minimisation.  Otherwise, \code{shoof} interpolates
+between these two extremes, with a value close to zero giving a starting
+value that is close to the current solution.
+The exception to this is when the initial and current solutions are equal.
+Then we start from the current solution multiplied by \code{1 - shoof}.}
 }
 \value{
 An object of class "ru" is a list containing the following
@@ -200,8 +232,8 @@ If \code{trans = "none"} and \code{rotate = FALSE} then \code{ru}
   likely to be close to optimal in many cases, particularly if
   \code{trans = "BC"}.
 
-See \code{vignette("rust-using-rcpp-vignette", package = "rust")} and
-\code{vignette("rust-vignette", package = "rust")} for full details.
+See \code{vignette("rust-b-using-rcpp-vignette", package = "rust")} and
+\code{vignette("rust-a-vignette", package = "rust")} for full details.
 }
 \examples{
 n <- 1000
@@ -299,7 +331,7 @@ x <- ru_rcpp(logf = ptr_gam, alpha = alpha, d = 1, n = n,
   user_args = list(lambda = lambda), init = alpha)
 summary(x)
 
-\dontrun{
+\donttest{
 # Generalized Pareto posterior distribution ===================
 
 # Sample data from a GP(sigma, xi) distribution
