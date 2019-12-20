@@ -52,7 +52,7 @@
 #'   or \link{find_lambda} (for any \code{d}).
 #' }
 #' @param lambda_tol A numeric scalar.  Any values in lambda that are less
-#'  than lambda_tol in magnitude are set to zero.
+#'  than \code{lambda_tol} in magnitude are set to zero.
 #' @param gm A numeric vector. Box-cox scaling parameters (optional). If
 #'   \code{lambda$gm} is supplied in input list \code{lambda} then
 #'   \code{lambda$gm} is used, not \code{gm}.
@@ -340,8 +340,7 @@
 #'   the Rcpp package to improve efficiency.
 #' @seealso \code{\link{summary.ru}} for summaries of the simulated values
 #'   and properties of the ratio-of-uniforms algorithm.
-#' @seealso \code{\link{plot.ru}} for a diagnostic plot (for \code{d} = 1
-#'   and \code{d} = 2 only).
+#' @seealso \code{\link{plot.ru}} for a diagnostic plot.
 #' @seealso \code{\link{find_lambda_one_d}} to produce (somewhat) automatically
 #'   a list for the argument \code{lambda} of \code{ru} for the
 #'   \code{d} = 1 case.
@@ -372,6 +371,11 @@ ru <- function(logf, ..., n = 1, d = 1, init = NULL,
                a_control = list(), b_control = list(), var_names = NULL,
                shoof = 0.2) {
   #
+  Call <- match.call(expand.dots = TRUE)
+  # Check that shoof is in [0, 1]
+  if (shoof < 0 || shoof > 1) {
+    stop("''shoof'' must be in [0, 1]")
+  }
   # Check that the values of key arguments are suitable
   if (r < 0) {
     stop("r must be non-negative")
@@ -723,6 +727,7 @@ ru <- function(logf, ..., n = 1, d = 1, init = NULL,
   res$logf_args <- list(...)
   res$logf_rho <- logf_rho
   res$f_mode <- f_mode
+  res$call <- Call
   class(res) <- "ru"
   return(res)
 }

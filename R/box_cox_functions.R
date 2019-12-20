@@ -21,7 +21,7 @@
 #'   are set to ep_bc.
 #' @param num A numeric scalar. Number of values at which to evaluate logf.
 #' @param xdiv A numeric scalar.  Only values of phi at which the density f is
-#'   greater than the (maximum of f)/xdiv are used.
+#'   greater than the (maximum of f) / \code{xdiv} are used.
 #' @param probs A numeric scalar. Probabilities at which to estimate the
 #'   quantiles of that will be used as data to find lambda.
 #' @param lambda_range A numeric vector of length 2.  Range of lambda over
@@ -64,10 +64,9 @@
 #'
 #' @references Box, G. and Cox, D. R. (1964) An Analysis of Transformations.
 #'  Journal of the Royal Statistical Society. Series B (Methodological), 26(2),
-#'  211-252, \url{http://www.jstor.org/stable/2984418}.
+#'  211-252.
 #' @references Andrews, D. F. and Gnanadesikan, R. and Warner, J. L. (1971)
-#'  Transformations of Multivariate Data, Biometrics, 27(4),
-#'  \url{https://dx.doi.org/10.2307/2528821}.
+#'  Transformations of Multivariate Data, Biometrics, 27(4).
 #' @examples
 #' # Log-normal density ===================
 #'
@@ -189,7 +188,7 @@ find_lambda_one_d <- function(logf, ..., ep_bc = 1e-4, min_phi = ep_bc,
   areas <- wbar * xdiff
   w <- areas / sum(areas)
   # Estimate the 100*probs% quantiles of the density
-  qs <- spatstat::quantile.ewcdf(spatstat::ewcdf(xmid, w), probs = probs)
+  qs <- stats::quantile(wecdf(xmid, w), probs = probs)
   qs <- matrix(qs, ncol = 1)
   # Use the quantiles qs as a sample of data to estimate lambda
   # Set to 1 all the input weights associated with the quantiles
@@ -264,10 +263,9 @@ find_lambda_one_d <- function(logf, ..., ep_bc = 1e-4, min_phi = ep_bc,
 #'  \item{log_j}{as detailed above (only if \code{log_j} is supplied)}
 #' @references Box, G. and Cox, D. R. (1964) An Analysis of Transformations.
 #'  Journal of the Royal Statistical Society. Series B (Methodological), 26(2),
-#'  211-252, \url{http://www.jstor.org/stable/2984418}.
+#'  211-252.
 #' @references Andrews, D. F. and Gnanadesikan, R. and Warner, J. L. (1971)
-#'  Transformations of Multivariate Data, Biometrics, 27(4),
-#'  \url{https://dx.doi.org/10.2307/2528821}.
+#'  Transformations of Multivariate Data, Biometrics, 27(4).
 #' @examples
 #' # Log-normal density ===================
 #' # Note: the default value max_phi = 10 is OK here but this will not always

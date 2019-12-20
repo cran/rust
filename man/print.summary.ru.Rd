@@ -44,8 +44,11 @@ x <- ru(logf = log_dmvnorm, sigma = covmat, d = 2, n = 1000, init = c(0, 0))
 summary(x)
 }
 \seealso{
-\code{\link{ru}} for descriptions of \code{object$sim_vals} and
-  \code{object$box}.
+\code{\link{summary.ru}} for summaries of the simulated values
+  and properties of the ratio-of-uniforms algorithm.
 
 \code{\link{plot.ru}} for a diagnostic plot.
+
+\code{\link{ru}} for descriptions of \code{object$sim_vals} and
+  \code{object$box}.
 }

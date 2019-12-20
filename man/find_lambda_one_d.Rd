@@ -35,7 +35,7 @@ are set to ep_bc.}
 \item{num}{A numeric scalar. Number of values at which to evaluate logf.}
 
 \item{xdiv}{A numeric scalar.  Only values of phi at which the density f is
-greater than the (maximum of f)/xdiv are used.}
+greater than the (maximum of f) / \code{xdiv} are used.}
 
 \item{probs}{A numeric scalar. Probabilities at which to estimate the
 quantiles of that will be used as data to find lambda.}
@@ -140,11 +140,10 @@ plot(x, ru_scale = TRUE)
 \references{
 Box, G. and Cox, D. R. (1964) An Analysis of Transformations.
  Journal of the Royal Statistical Society. Series B (Methodological), 26(2),
- 211-252, \url{http://www.jstor.org/stable/2984418}.
+ 211-252.
 
 Andrews, D. F. and Gnanadesikan, R. and Warner, J. L. (1971)
- Transformations of Multivariate Data, Biometrics, 27(4),
- \url{https://dx.doi.org/10.2307/2528821}.
+ Transformations of Multivariate Data, Biometrics, 27(4).
 }
 \seealso{
 \code{\link{ru}} and \code{\link{ru_rcpp}} to perform

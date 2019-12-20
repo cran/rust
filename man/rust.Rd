@@ -32,7 +32,7 @@ Wakefield, J. C., Gelfand, A. E. and Smith, A. F. M. Efficient
 
 Box, G. and Cox, D. R. (1964) An Analysis of Transformations.
  Journal of the Royal Statistical Society. Series B (Methodological), 26(2),
- 211-252, \url{https://www.jstor.org/stable/2984418}.
+ 211-252.
 
 Eddelbuettel, D. and Francois, R. (2011). Rcpp: Seamless R and
   C++ Integration. Journal of Statistical Software, 40(8), 1-18.
@@ -48,8 +48,7 @@ Eddelbuettel, D. (2013) Seamless R and C++ Integration with
 \code{\link{summary.ru}} for summaries of the simulated values
   and properties of the ratio-of-uniforms algorithm.
 
-\code{\link{plot.ru}} for a diagnostic plot (for \code{d} = 1
-  and \code{d} = 2 only).
+\code{\link{plot.ru}} for a diagnostic plot.
 
 \code{\link{find_lambda_one_d}} and
   \code{\link{find_lambda_one_d_rcpp}} to produce (somewhat) automatically

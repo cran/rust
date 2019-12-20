@@ -26,7 +26,7 @@
 #'  \url{http://dx.doi.org/10.1007/BF01889987}.
 #' @references Box, G. and Cox, D. R. (1964) An Analysis of Transformations.
 #'  Journal of the Royal Statistical Society. Series B (Methodological), 26(2),
-#'  211-252, \url{https://www.jstor.org/stable/2984418}.
+#'  211-252.
 #' @references Eddelbuettel, D. and Francois, R. (2011). Rcpp: Seamless R and
 #'   C++ Integration. Journal of Statistical Software, 40(8), 1-18.
 #'   \url{http://www.jstatsoft.org/v40/i08/}.
@@ -37,8 +37,7 @@
 #'   ratio-of-uniforms sampling.
 #' @seealso \code{\link{summary.ru}} for summaries of the simulated values
 #'   and properties of the ratio-of-uniforms algorithm.
-#' @seealso \code{\link{plot.ru}} for a diagnostic plot (for \code{d} = 1
-#'   and \code{d} = 2 only).
+#' @seealso \code{\link{plot.ru}} for a diagnostic plot.
 #' @seealso \code{\link{find_lambda_one_d}} and
 #'   \code{\link{find_lambda_one_d_rcpp}} to produce (somewhat) automatically
 #'   a list for the argument \code{lambda} of \code{ru} for the
@@ -50,7 +49,6 @@
 #'
 #' @docType package
 #' @name rust
-#' @import methods
 #' @importFrom stats runif
 #' @useDynLib rust, .registration = TRUE
 #' @importFrom Rcpp sourceCpp
