@@ -29,8 +29,8 @@ c(cauchy1$pa, cauchy126$pa)
 
 ## ---- fig.show='hold'---------------------------------------------------------
 library(bang)
-coag1 <- hanova1(resp = coagulation[, 1], fac = coagulation[, 2], n = 10000)
-coag2 <- hanova1(resp = coagulation[, 1], fac = coagulation[, 2], n = 10000,
+coag1 <- hanova1(resp = coagulation[, 1], fac = coagulation[, 2], n = 1000)
+coag2 <- hanova1(resp = coagulation[, 1], fac = coagulation[, 2], n = 1000,
                  param = "original", r = 1)
 probs <- c(2.5, 25, 50, 75, 97.5) / 100
 all1 <- cbind(coag1$theta_sim_vals, coag1$sim_vals)
@@ -47,13 +47,13 @@ normal_mixture <- function(x, mu, p) {
   return(log(p * dnorm(x) + (1 - p) * dnorm(x, mean = mu)))
 }
 
-res1 <- ru(logf = normal_mixture, mu = 10, p = 0.25, init = -1, n = 10000)
+res1 <- ru(logf = normal_mixture, mu = 10, p = 0.25, init = -1, n = 1000)
 plot(res1, main = "(a)")
-res2 <- ru(logf = normal_mixture, mu = 10, p = 0.25, init = 11, n = 10000)
+res2 <- ru(logf = normal_mixture, mu = 10, p = 0.25, init = 11, n = 1000)
 plot(res2, main = "(b)")
-res3 <- ru(logf = normal_mixture, mu = 4, p = 0.25, init = 5, n = 10000)
+res3 <- ru(logf = normal_mixture, mu = 4, p = 0.25, init = 5, n = 1000)
 plot(res3, main = "(c)")
 res3$pa
-res4 <- ru(logf = normal_mixture, mu = 4, p = 0.25, init = -1, n = 10000)
+res4 <- ru(logf = normal_mixture, mu = 4, p = 0.25, init = -1, n = 1000)
 plot(res4, main = "(d)")
 

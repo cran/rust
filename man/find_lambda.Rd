@@ -121,6 +121,7 @@ ss <- gpd_sum_stats(gpd_data)
 # Calculate an initial estimate
 init <- c(mean(gpd_data), 0)
 
+n <- 1000
 # Sample on original scale, with no rotation ----------------
 x1 <- ru(logf = gpd_logpost, ss = ss, d = 2, n = n, init = init,
   lower = c(0, -Inf), rotate = FALSE)
