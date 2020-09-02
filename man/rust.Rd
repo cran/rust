@@ -28,7 +28,7 @@ the package.
 Wakefield, J. C., Gelfand, A. E. and Smith, A. F. M. Efficient
  generation of random variates via the ratio-of-uniforms method. Statistics
  and Computing (1991) 1, 129-133.
- \url{http://dx.doi.org/10.1007/BF01889987}.
+ \url{https://doi.org/10.1007/BF01889987}.
 
 Box, G. and Cox, D. R. (1964) An Analysis of Transformations.
  Journal of the Royal Statistical Society. Series B (Methodological), 26(2),
@@ -36,7 +36,7 @@ Box, G. and Cox, D. R. (1964) An Analysis of Transformations.
 
 Eddelbuettel, D. and Francois, R. (2011). Rcpp: Seamless R and
   C++ Integration. Journal of Statistical Software, 40(8), 1-18.
-  \url{http://www.jstatsoft.org/v40/i08/}.
+  \url{https://www.jstatsoft.org/v40/i08/}.
 
 Eddelbuettel, D. (2013) Seamless R and C++ Integration with
   Rcpp. Springer, New York. ISBN 978-1-4614-6867-7.

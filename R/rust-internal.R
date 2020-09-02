@@ -251,7 +251,7 @@ gpd_mle <- function(gpd_data) {
   #
   # Grimshaw, S. D. (1993) Computing Maximum Likelihood Estimates
   #   for the Generalized Pareto Distribution.  Technometrics, 35(2), 185-191.
-  #   and Computing (1991) 1, 129-133. http://dx.doi.org/10.1007/BF01889987.
+  #   and Computing (1991) 1, 129-133. https://doi.org/10.1007/BF01889987.
   #
   # Args:
   #   gpd_data : A numeric vector containing positive values, assumed to be a
@@ -262,12 +262,11 @@ gpd_mle <- function(gpd_data) {
   #     mle  : A numeric vector.  MLEs of GP parameters sigma and xi.
   #     nllh : A numeric scalar.  The negated log-likelihood at the MLE.
   #
-  # Call Grimshaw (1993) function, note: k is -xi, a is sigma
-  #  pjn <- grimshaw_gpdmle(gpd_data)
   temp <- list()
   # Use revdbayes function if revdbayes is available, otherwise use fallback
   if (requireNamespace("revdbayes", quietly = TRUE)) {
-    pjn <- revdbayes:::grimshaw_gp_mle(gpd_data)
+    # Call Grimshaw (1993) function, note: k is -xi, a is sigma
+    pjn <- revdbayes::grimshaw_gp_mle(gpd_data)
     temp$mle <- c(pjn$a, -pjn$k)  # mle for (sigma,xi)
   } else {
     temp <- fallback_gp_mle(init = c(mean(gpd_data), 0), gpd_data = gpd_data,

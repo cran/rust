@@ -12,7 +12,7 @@
 
 <meta name="author" content="Paul Northrop" />
 
-<meta name="date" content="2020-07-21" />
+<meta name="date" content="2020-09-02" />
 
 <title>Introducing rust: Ratio-of-Uniforms Simulation with Transformation</title>
 
@@ -303,7 +303,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 <h1 class="title toc-ignore">Introducing rust: Ratio-of-Uniforms Simulation with Transformation</h1>
 <h4 class="author">Paul Northrop</h4>
-<h4 class="date">2020-07-21</h4>
+<h4 class="date">2020-09-02</h4>
 
 
 <div id="TOC">
@@ -453,11 +453,11 @@ b_i^+(r) &amp;=&amp; \sup_{\chi_i^+} \, x_i \, f(x)^{r / (r d + 1)},
 <span id="cb4-16"><a href="#cb4-16"></a><span class="co">#&gt; </span></span>
 <span id="cb4-17"><a href="#cb4-17"></a><span class="co">#&gt; $phi_to_theta</span></span>
 <span id="cb4-18"><a href="#cb4-18"></a><span class="co">#&gt; function(phi) c(phi[1], phi[2] - phi[1] / ss$xm)</span></span>
-<span id="cb4-19"><a href="#cb4-19"></a><span class="co">#&gt; &lt;bytecode: 0x00000000125254f8&gt;</span></span>
+<span id="cb4-19"><a href="#cb4-19"></a><span class="co">#&gt; &lt;bytecode: 0x000000000fc5f6e0&gt;</span></span>
 <span id="cb4-20"><a href="#cb4-20"></a><span class="co">#&gt; </span></span>
 <span id="cb4-21"><a href="#cb4-21"></a><span class="co">#&gt; $log_j</span></span>
 <span id="cb4-22"><a href="#cb4-22"></a><span class="co">#&gt; function(x) 0</span></span>
-<span id="cb4-23"><a href="#cb4-23"></a><span class="co">#&gt; &lt;bytecode: 0x000000001301cc40&gt;</span></span></code></pre></div>
+<span id="cb4-23"><a href="#cb4-23"></a><span class="co">#&gt; &lt;bytecode: 0x00000000130526b8&gt;</span></span></code></pre></div>
 <p>We sample from the Box-Cox transformed density, first without, and then with, rotation of axes.</p>
 <div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a><span class="co"># Sample on Box-Cox transformed, without rotation</span></span>
 <span id="cb5-2"><a href="#cb5-2"></a>x3 &lt;-<span class="st"> </span><span class="kw">ru</span>(<span class="dt">logf =</span> gpd_logpost, <span class="dt">ss =</span> ss, <span class="dt">d =</span> <span class="dv">2</span>, <span class="dt">n =</span> n, <span class="dt">trans =</span> <span class="st">&quot;BC&quot;</span>,</span>

@@ -56,7 +56,7 @@ gpd_sum_stats <- function(gpd_data) {
 #' @seealso \code{\link{rgpd}} for simulation from a generalized Pareto
 #' @references Northrop, P. J. and Attalides, N. (2016) Posterior propriety in
 #' Bayesian extreme value analyses using reference priors. Statistica Sinica,
-#' 26(2), 721-743, \url{http://dx.doi.org/10.5705/ss.2014.034}.
+#' 26(2), 721-743, \url{https://doi.org/10.5705/ss.2014.034}.
 #' @examples
 #' \donttest{
 #' # Sample data from a GP(sigma, xi) distribution
@@ -162,13 +162,13 @@ rgpd <- function (m = 1, sigma = 1, xi = 0) {
 #'   \code{init_phi} is returned.
 #' @references Grimshaw, S. D. (1993) Computing Maximum Likelihood Estimates
 #'   for the Generalized Pareto Distribution.  Technometrics, 35(2), 185-191.
-#'   and Computing (1991) 1, 129-133. \url{http://dx.doi.org/10.1007/BF01889987}.
+#'   and Computing (1991) 1, 129-133. \url{https://doi.org/10.1007/BF01889987}.
 #' @references Hosking, J. R. M. and Wallis, J. R. (1987) Parameter and Quantile
 #'   Estimation for the Generalized Pareto Distribution. Technometrics, 29(3),
-#'   339-349. \url{http://dx.doi.org/10.2307/1269343}.
+#'   339-349. \url{https://doi.org/10.2307/1269343}.
 #' @references Reiss, R.-D., Thomas, M. (2007) Statistical Analysis of Extreme Values
 #'   with Applications to Insurance, Finance, Hydrology and Other Fields.Birkhauser.
-#'   \url{http://dx.doi.org/10.1007/978-3-7643-7399-3}.
+#'   \url{https://doi.org/10.1007/978-3-7643-7399-3}.
 #' @seealso \code{\link{gpd_sum_stats}} to calculate summary statistics for
 #'   use in \code{gpd_loglik}.
 #' @seealso \code{\link{rgpd}} for simulation from a generalized Pareto
@@ -230,7 +230,7 @@ gpd_init <- function(gpd_data, m, xm, sum_gp = NULL, xi_eq_zero = FALSE,
       stop("revdbayes needed for this function to work. Please install it.",
            call. = FALSE)
     }
-    pwm <- revdbayes:::gp_pwm(gpd_data)
+    pwm <- revdbayes::gp_pwm(gpd_data)
     se <- pwm$se
     mat <- matrix(c(1, 0, 1 / xm, 1), 2, 2, byrow = TRUE)
     var_phi <- mat %*% pwm$cov %*% t(mat)
@@ -250,7 +250,7 @@ gpd_init <- function(gpd_data, m, xm, sum_gp = NULL, xi_eq_zero = FALSE,
       stop("revdbayes needed for this function to work. Please install it.",
            call. = FALSE)
     }
-    init <- revdbayes:::gp_lrs(gpd_data)
+    init <- revdbayes::gp_lrs(gpd_data)
     check <- gpd_loglik(pars = init, gpd_data = gpd_data, m = m, xm = xm,
                         sum_gp = sum_gp)
     if (init[2] > -1 & !is.infinite(check)) {
