@@ -170,7 +170,7 @@
 #' @references Wakefield, J. C., Gelfand, A. E. and Smith, A. F. M. (1991)
 #'  Efficient generation of random variates via the ratio-of-uniforms method.
 #'  \emph{Statistics and Computing} (1991), \strong{1}, 129-133.
-#'  \url{https://doi.org/10.1007/BF01889987}.
+#'  \doi{10.1007/BF01889987}.
 #' @examples
 #' # Normal density ===================
 #'
@@ -694,14 +694,14 @@ ru <- function(logf, ..., n = 1, d = 1, init = NULL,
   #
   d_box <- u_box - l_box
   d_r <- d * r + 1
-  #----------------------------------# start of while loop  while (n_acc < n) {
+  #----------------------------------# start of while loop while (n_acc < n) {
   while (n_acc < n) {
     u <- runif(1, 0, a_box)
     vs <- d_box * runif(d) + l_box
     rho <- vs / u ^ r
     rhs <- logf_rho(rho, ...)
     n_try <- n_try + 1L
-    if (d_r * log(u) < rhs) {
+    if (isTRUE(d_r * log(u) < rhs)) {
       n_acc <- n_acc + 1L
       res$sim_vals[n_acc, ] <- attr(rhs, "theta")
       res$sim_vals_rho[n_acc, ] <- rho

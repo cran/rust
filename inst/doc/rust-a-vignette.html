@@ -12,10 +12,26 @@
 
 <meta name="author" content="Paul Northrop" />
 
-<meta name="date" content="2020-09-02" />
+<meta name="date" content="2021-02-08" />
 
 <title>Introducing rust: Ratio-of-Uniforms Simulation with Transformation</title>
 
+<script>// Hide empty <a> tag within highlighted CodeBlock for screen reader accessibility (see https://github.com/jgm/pandoc/issues/6352#issuecomment-626106786) -->
+// v0.0.1
+// Written by JooYoung Seo (jooyoung@psu.edu) and Atsushi Yasumoto on June 1st, 2020.
+
+document.addEventListener('DOMContentLoaded', function() {
+  const codeList = document.getElementsByClassName("sourceCode");
+  for (var i = 0; i < codeList.length; i++) {
+    var linkList = codeList[i].getElementsByTagName('a');
+    for (var j = 0; j < linkList.length; j++) {
+      if (linkList[j].innerHTML === "") {
+        linkList[j].setAttribute('aria-hidden', 'true');
+      }
+    }
+  }
+});
+</script>
 
 
 <style type="text/css">code{white-space: pre;}</style>
@@ -303,7 +319,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 <h1 class="title toc-ignore">Introducing rust: Ratio-of-Uniforms Simulation with Transformation</h1>
 <h4 class="author">Paul Northrop</h4>
-<h4 class="date">2020-09-02</h4>
+<h4 class="date">2021-02-08</h4>
 
 
 <div id="TOC">
@@ -453,11 +469,11 @@ b_i^+(r) &amp;=&amp; \sup_{\chi_i^+} \, x_i \, f(x)^{r / (r d + 1)},
 <span id="cb4-16"><a href="#cb4-16"></a><span class="co">#&gt; </span></span>
 <span id="cb4-17"><a href="#cb4-17"></a><span class="co">#&gt; $phi_to_theta</span></span>
 <span id="cb4-18"><a href="#cb4-18"></a><span class="co">#&gt; function(phi) c(phi[1], phi[2] - phi[1] / ss$xm)</span></span>
-<span id="cb4-19"><a href="#cb4-19"></a><span class="co">#&gt; &lt;bytecode: 0x000000000fc5f6e0&gt;</span></span>
+<span id="cb4-19"><a href="#cb4-19"></a><span class="co">#&gt; &lt;bytecode: 0x000000001320a0d8&gt;</span></span>
 <span id="cb4-20"><a href="#cb4-20"></a><span class="co">#&gt; </span></span>
 <span id="cb4-21"><a href="#cb4-21"></a><span class="co">#&gt; $log_j</span></span>
 <span id="cb4-22"><a href="#cb4-22"></a><span class="co">#&gt; function(x) 0</span></span>
-<span id="cb4-23"><a href="#cb4-23"></a><span class="co">#&gt; &lt;bytecode: 0x00000000130526b8&gt;</span></span></code></pre></div>
+<span id="cb4-23"><a href="#cb4-23"></a><span class="co">#&gt; &lt;bytecode: 0x000000001028fc28&gt;</span></span></code></pre></div>
 <p>We sample from the Box-Cox transformed density, first without, and then with, rotation of axes.</p>
 <div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a><span class="co"># Sample on Box-Cox transformed, without rotation</span></span>
 <span id="cb5-2"><a href="#cb5-2"></a>x3 &lt;-<span class="st"> </span><span class="kw">ru</span>(<span class="dt">logf =</span> gpd_logpost, <span class="dt">ss =</span> ss, <span class="dt">d =</span> <span class="dv">2</span>, <span class="dt">n =</span> n, <span class="dt">trans =</span> <span class="st">&quot;BC&quot;</span>,</span>

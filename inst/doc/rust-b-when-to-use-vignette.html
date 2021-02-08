@@ -12,10 +12,26 @@
 
 <meta name="author" content="Paul Northrop" />
 
-<meta name="date" content="2020-09-02" />
+<meta name="date" content="2021-02-08" />
 
 <title>When can rust be used?</title>
 
+<script>// Hide empty <a> tag within highlighted CodeBlock for screen reader accessibility (see https://github.com/jgm/pandoc/issues/6352#issuecomment-626106786) -->
+// v0.0.1
+// Written by JooYoung Seo (jooyoung@psu.edu) and Atsushi Yasumoto on June 1st, 2020.
+
+document.addEventListener('DOMContentLoaded', function() {
+  const codeList = document.getElementsByClassName("sourceCode");
+  for (var i = 0; i < codeList.length; i++) {
+    var linkList = codeList[i].getElementsByTagName('a');
+    for (var j = 0; j < linkList.length; j++) {
+      if (linkList[j].innerHTML === "") {
+        linkList[j].setAttribute('aria-hidden', 'true');
+      }
+    }
+  }
+});
+</script>
 
 
 <style type="text/css">code{white-space: pre;}</style>
@@ -303,7 +319,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 <h1 class="title toc-ignore">When can rust be used?</h1>
 <h4 class="author">Paul Northrop</h4>
-<h4 class="date">2020-09-02</h4>
+<h4 class="date">2021-02-08</h4>
 
 
 <div id="TOC">
@@ -378,31 +394,30 @@ j = 1, \ldots, n_i,  \label{eqn:1way}
 <p>To illustrate the problem that a heavy-tailed density can cause a naive implementation of the generalized ratio-of-uniforms algorithm we use the blood coagulation time data presented in Table 11.2 of <span class="citation">Gelman et al. (2014)</span>. These data are available as the dataframe <code>coagulation</code> in the <strong>bang</strong> package <span class="citation">(Northrop and Hall 2017)</span>: the first column holds the response values (the coagulation times of blood drawn from 24 animals), the second column a factor indicating to which of 4 diets the animal is allocated.</p>
 <p>The <strong>bang</strong> function <code>hanova1</code> samples from the marginal posterior distribution of <span class="math inline">\((\mu, \sigma_\alpha, \sigma)\)</span> given data based on a user-supplied prior distribution. The default prior is <span class="math inline">\(\pi(\mu, \sigma_\alpha, \log\sigma) \propto 1\)</span>. Under this prior, or indeed any prior in which <span class="math inline">\(\mu\)</span> is normally distributed and independent of <span class="math inline">\((\sigma_\alpha, \sigma)\)</span> <em>a priori</em>, the generalized ratio-of-uniforms method can be used to sample from the marginal posterior distribution of <span class="math inline">\((\sigma_\alpha, \sigma)\)</span>. By default (argument <code>param = &quot;trans&quot;</code>) then <code>hanova1</code> parameterizes this marginal posterior in terms of <span class="math inline">\((\log \sigma_\alpha, \log \sigma)\)</span>. If instead we use <code>param = &quot;original&quot;</code>, so that this posterior is parameterized in terms of <span class="math inline">\((\mu, \sigma_\alpha, \sigma)\)</span>, then, with the default <span class="math inline">\(r = 1/2\)</span>, we find that the bounding box cannot be found because the right tail of the posterior for <span class="math inline">\(\sigma_\alpha\)</span> is heavy enough to prevent this. However, if we use <span class="math inline">\(r = 1\)</span> then the bounding box can be found. The two successful approaches (reparameterization or use of <span class="math inline">\(r=1\)</span>) are illustrated below.</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a><span class="kw">library</span>(bang)</span>
-<span id="cb3-2"><a href="#cb3-2"></a><span class="co">#&gt; Warning: package &#39;bang&#39; was built under R version 4.0.2</span></span>
-<span id="cb3-3"><a href="#cb3-3"></a>coag1 &lt;-<span class="st"> </span><span class="kw">hanova1</span>(<span class="dt">resp =</span> coagulation[, <span class="dv">1</span>], <span class="dt">fac =</span> coagulation[, <span class="dv">2</span>], <span class="dt">n =</span> <span class="dv">1000</span>)</span>
-<span id="cb3-4"><a href="#cb3-4"></a>coag2 &lt;-<span class="st"> </span><span class="kw">hanova1</span>(<span class="dt">resp =</span> coagulation[, <span class="dv">1</span>], <span class="dt">fac =</span> coagulation[, <span class="dv">2</span>], <span class="dt">n =</span> <span class="dv">1000</span>,</span>
-<span id="cb3-5"><a href="#cb3-5"></a>                 <span class="dt">param =</span> <span class="st">&quot;original&quot;</span>, <span class="dt">r =</span> <span class="dv">1</span>)</span>
-<span id="cb3-6"><a href="#cb3-6"></a>probs &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="fl">2.5</span>, <span class="dv">25</span>, <span class="dv">50</span>, <span class="dv">75</span>, <span class="fl">97.5</span>) <span class="op">/</span><span class="st"> </span><span class="dv">100</span></span>
-<span id="cb3-7"><a href="#cb3-7"></a>all1 &lt;-<span class="st"> </span><span class="kw">cbind</span>(coag1<span class="op">$</span>theta_sim_vals, coag1<span class="op">$</span>sim_vals)</span>
-<span id="cb3-8"><a href="#cb3-8"></a>all2 &lt;-<span class="st"> </span><span class="kw">cbind</span>(coag2<span class="op">$</span>theta_sim_vals, coag2<span class="op">$</span>sim_vals)</span>
-<span id="cb3-9"><a href="#cb3-9"></a><span class="kw">round</span>(<span class="kw">t</span>(<span class="kw">apply</span>(all1, <span class="dv">2</span>, quantile, <span class="dt">probs =</span> probs)), <span class="dv">1</span>)</span>
-<span id="cb3-10"><a href="#cb3-10"></a><span class="co">#&gt;              2.5%  25%  50%  75% 97.5%</span></span>
-<span id="cb3-11"><a href="#cb3-11"></a><span class="co">#&gt; theta[1]     58.8 60.4 61.2 62.0  63.7</span></span>
-<span id="cb3-12"><a href="#cb3-12"></a><span class="co">#&gt; theta[2]     63.9 65.2 65.8 66.5  67.8</span></span>
-<span id="cb3-13"><a href="#cb3-13"></a><span class="co">#&gt; theta[3]     65.7 67.1 67.8 68.4  69.8</span></span>
-<span id="cb3-14"><a href="#cb3-14"></a><span class="co">#&gt; theta[4]     59.5 60.6 61.2 61.7  62.9</span></span>
-<span id="cb3-15"><a href="#cb3-15"></a><span class="co">#&gt; mu           54.0 62.2 63.9 65.8  72.8</span></span>
-<span id="cb3-16"><a href="#cb3-16"></a><span class="co">#&gt; sigma[alpha]  2.0  3.6  5.3  8.0  26.3</span></span>
-<span id="cb3-17"><a href="#cb3-17"></a><span class="co">#&gt; sigma         1.8  2.2  2.4  2.7   3.4</span></span>
-<span id="cb3-18"><a href="#cb3-18"></a><span class="kw">round</span>(<span class="kw">t</span>(<span class="kw">apply</span>(all2, <span class="dv">2</span>, quantile, <span class="dt">probs =</span> probs)), <span class="dv">1</span>)</span>
-<span id="cb3-19"><a href="#cb3-19"></a><span class="co">#&gt;              2.5%  25%  50%  75% 97.5%</span></span>
-<span id="cb3-20"><a href="#cb3-20"></a><span class="co">#&gt; theta[1]     58.7 60.4 61.3 62.1  63.8</span></span>
-<span id="cb3-21"><a href="#cb3-21"></a><span class="co">#&gt; theta[2]     63.9 65.3 65.9 66.6  67.9</span></span>
-<span id="cb3-22"><a href="#cb3-22"></a><span class="co">#&gt; theta[3]     65.6 67.1 67.8 68.4  69.7</span></span>
-<span id="cb3-23"><a href="#cb3-23"></a><span class="co">#&gt; theta[4]     59.6 60.6 61.1 61.7  62.8</span></span>
-<span id="cb3-24"><a href="#cb3-24"></a><span class="co">#&gt; mu           54.3 62.3 64.0 65.7  72.2</span></span>
-<span id="cb3-25"><a href="#cb3-25"></a><span class="co">#&gt; sigma[alpha]  1.9  3.5  5.0  7.6  26.6</span></span>
-<span id="cb3-26"><a href="#cb3-26"></a><span class="co">#&gt; sigma         1.8  2.2  2.4  2.7   3.5</span></span></code></pre></div>
+<span id="cb3-2"><a href="#cb3-2"></a>coag1 &lt;-<span class="st"> </span><span class="kw">hanova1</span>(<span class="dt">resp =</span> coagulation[, <span class="dv">1</span>], <span class="dt">fac =</span> coagulation[, <span class="dv">2</span>], <span class="dt">n =</span> <span class="dv">1000</span>)</span>
+<span id="cb3-3"><a href="#cb3-3"></a>coag2 &lt;-<span class="st"> </span><span class="kw">hanova1</span>(<span class="dt">resp =</span> coagulation[, <span class="dv">1</span>], <span class="dt">fac =</span> coagulation[, <span class="dv">2</span>], <span class="dt">n =</span> <span class="dv">1000</span>,</span>
+<span id="cb3-4"><a href="#cb3-4"></a>                 <span class="dt">param =</span> <span class="st">&quot;original&quot;</span>, <span class="dt">r =</span> <span class="dv">1</span>)</span>
+<span id="cb3-5"><a href="#cb3-5"></a>probs &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="fl">2.5</span>, <span class="dv">25</span>, <span class="dv">50</span>, <span class="dv">75</span>, <span class="fl">97.5</span>) <span class="op">/</span><span class="st"> </span><span class="dv">100</span></span>
+<span id="cb3-6"><a href="#cb3-6"></a>all1 &lt;-<span class="st"> </span><span class="kw">cbind</span>(coag1<span class="op">$</span>theta_sim_vals, coag1<span class="op">$</span>sim_vals)</span>
+<span id="cb3-7"><a href="#cb3-7"></a>all2 &lt;-<span class="st"> </span><span class="kw">cbind</span>(coag2<span class="op">$</span>theta_sim_vals, coag2<span class="op">$</span>sim_vals)</span>
+<span id="cb3-8"><a href="#cb3-8"></a><span class="kw">round</span>(<span class="kw">t</span>(<span class="kw">apply</span>(all1, <span class="dv">2</span>, quantile, <span class="dt">probs =</span> probs)), <span class="dv">1</span>)</span>
+<span id="cb3-9"><a href="#cb3-9"></a><span class="co">#&gt;              2.5%  25%  50%  75% 97.5%</span></span>
+<span id="cb3-10"><a href="#cb3-10"></a><span class="co">#&gt; theta[1]     58.8 60.4 61.2 62.0  63.7</span></span>
+<span id="cb3-11"><a href="#cb3-11"></a><span class="co">#&gt; theta[2]     63.9 65.2 65.8 66.5  67.8</span></span>
+<span id="cb3-12"><a href="#cb3-12"></a><span class="co">#&gt; theta[3]     65.7 67.1 67.8 68.4  69.8</span></span>
+<span id="cb3-13"><a href="#cb3-13"></a><span class="co">#&gt; theta[4]     59.5 60.6 61.2 61.7  62.9</span></span>
+<span id="cb3-14"><a href="#cb3-14"></a><span class="co">#&gt; mu           54.0 62.2 63.9 65.8  72.8</span></span>
+<span id="cb3-15"><a href="#cb3-15"></a><span class="co">#&gt; sigma[alpha]  2.0  3.6  5.3  8.0  26.3</span></span>
+<span id="cb3-16"><a href="#cb3-16"></a><span class="co">#&gt; sigma         1.8  2.2  2.4  2.7   3.4</span></span>
+<span id="cb3-17"><a href="#cb3-17"></a><span class="kw">round</span>(<span class="kw">t</span>(<span class="kw">apply</span>(all2, <span class="dv">2</span>, quantile, <span class="dt">probs =</span> probs)), <span class="dv">1</span>)</span>
+<span id="cb3-18"><a href="#cb3-18"></a><span class="co">#&gt;              2.5%  25%  50%  75% 97.5%</span></span>
+<span id="cb3-19"><a href="#cb3-19"></a><span class="co">#&gt; theta[1]     58.7 60.4 61.3 62.1  63.8</span></span>
+<span id="cb3-20"><a href="#cb3-20"></a><span class="co">#&gt; theta[2]     63.9 65.3 65.9 66.6  67.9</span></span>
+<span id="cb3-21"><a href="#cb3-21"></a><span class="co">#&gt; theta[3]     65.6 67.1 67.8 68.4  69.7</span></span>
+<span id="cb3-22"><a href="#cb3-22"></a><span class="co">#&gt; theta[4]     59.6 60.6 61.1 61.7  62.8</span></span>
+<span id="cb3-23"><a href="#cb3-23"></a><span class="co">#&gt; mu           54.3 62.3 64.0 65.7  72.2</span></span>
+<span id="cb3-24"><a href="#cb3-24"></a><span class="co">#&gt; sigma[alpha]  1.9  3.5  5.0  7.6  26.6</span></span>
+<span id="cb3-25"><a href="#cb3-25"></a><span class="co">#&gt; sigma         1.8  2.2  2.4  2.7   3.5</span></span></code></pre></div>
 <p>These posterior summaries are similar to those presented in Table 11.3 of <span class="citation">Gelman et al. (2014)</span> (where <span class="math inline">\(\sigma_\alpha\)</span> is denoted <span class="math inline">\(\tau\)</span>), which were obtained using Gibbs sampling.</p>
 <p>The reparameterization strategy has the higher estimated probability of acceptance.</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a>coag1<span class="op">$</span>pa</span>
