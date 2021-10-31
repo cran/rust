@@ -1,3 +1,9 @@
+# rust 1.3.13
+
+## Bug fixes and minor improvements
+
+* In help files and vignettes DOIs are used rather than URLs.
+
 # rust 1.3.12
 
 ## Bug fixes and minor improvements
