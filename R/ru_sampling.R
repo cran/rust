@@ -3,33 +3,61 @@
 #' Generalized ratio-of-uniforms sampling
 #'
 #' Uses the generalized ratio-of-uniforms method to simulate from a
-#' distribution with log-density \eqn{log f} (up to an additive constant).
-#' The density \eqn{f} must be bounded, perhaps after a transformation of variable.
+#' distribution with log-density \eqn{\log f}{log f} (up to an additive
+#' constant). The density \eqn{f} must be bounded, perhaps after a
+#' transformation of variable.
 #'
-#' @param logf A function returning the log of the target density \eqn{f}.
+#' @param logf A function returning the log of the target density \eqn{f}
+#'   evaluated at its first argument.
 #'   This function should return \code{-Inf} when the density is zero.
+#'   It is better to use \code{logf = } explicitly, for example,
+#'   \code{ru(logf = dnorm, log = TRUE, init = 0.1)},
+#'   to avoid argument matching problems.  In contrast,
+#'   \code{ru(dnorm, log = TRUE, init = 0.1)}
+#'   will throw an error because partial matching results in
+#'   \code{logf} being matched to \code{log = TRUE}.
 #' @param ... Further arguments to be passed to \code{logf} and related
 #'   functions.
-#' @param n A numeric scalar.  Number of simulated values required.
-#' @param d A numeric scalar. Dimension of f.
+#' @param n A non-negative integer scalar.  The number of simulated values
+#'   required. If \code{n = 0} then no simulation is performed but the
+#'   component \code{box} in the returned object gives the ratio-of-uniforms
+#'   bounding box that would have been used.
+#' @param d A positive integer scalar. The dimension of \eqn{f}.
 #' @param init A numeric vector. Initial estimates of the mode of \code{logf}.
-#'   If \code{trans="BC"} or \code{trans = "user"} this is \emph{after} Box-Cox
-#'   transformation or user-defined transformation, but \emph{before} any
-#'   rotation of axes.
-#' @param trans A character scalar. "none" for no transformation, "BC" for
-#'   Box-Cox transformation, "user" for a user-defined transformation.
+#'   If \code{trans = "BC"} or \code{trans = "user"} this is \emph{after}
+#'   Box-Cox transformation or user-defined transformation, but \emph{before}
+#'   any rotation of axes.
+#'   If \code{init} is not supplied then \code{rep(1, d)} is used.
+#' @param mode A numeric vector of length \code{d}.  The mode of \code{logf}.
+#'   If \code{trans = "BC"} or \code{trans = "user"} this is \emph{after}
+#'   Box-Cox transformation or user-defined transformation, but \emph{before}
+#'   any rotation of axes.  Only supply \code{mode} if the mode is known: it
+#'   will not be checked.  If \code{mode} is supplied then \code{init} is
+#'   ignored.
+#' @param trans A character scalar. \code{trans = "none"} for no
+#'   transformation, \code{trans = "BC"} for Box-Cox transformation,
+#'   \code{trans = "user"} for a user-defined transformation.
 #'   If \code{trans = "user"} then the transformation should be specified
 #'   using \code{phi_to_theta} and \code{log_j} and \code{user_args} may be
 #'   used to pass arguments to \code{phi_to_theta} and \code{log_j}.
+#'   See \strong{Details} and the \strong{Examples}.
 #' @param phi_to_theta A function returning (the inverse) of the transformation
-#'   from theta to phi used to ensure positivity of phi prior to Box-Cox
-#'   transformation.  The argument is phi and the returned value is theta.
+#'   from \code{theta} (\eqn{\theta}) to \code{phi} (\eqn{\phi}) that may be
+#'   used to ensure positivity of \eqn{\phi} prior to Box-Cox transformation.
+#'   The argument is \code{phi} and the returned value is \code{theta}.
 #'   If \code{phi_to_theta} is undefined at the input value then the
-#'   function should return NA.
+#'   function should return \code{NA}. See \strong{Details}.
+#'   If \code{lambda$phi_to_theta} (see argument \code{lambda} below) is
+#'   supplied then this is used instead of any function supplied via
+#'   \code{phi_to_theta}.
 #' @param log_j A function returning the log of the Jacobian of the
-#'  transformation from theta to phi, i.e. based on derivatives of phi with
-#'  respect to theta. Takes theta as its argument.
-#' @param user_args A list of numeric components. If \code{trans = ``user''}
+#'   transformation from \code{theta} (\eqn{\theta}) to \code{phi} (\eqn{\phi}),
+#'   i.e., based on derivatives of \eqn{\phi} with respect to \eqn{\theta}.
+#'   Takes \code{theta} as its argument.
+#'   If \code{lambda$log_j} (see argument \code{lambda} below) is
+#'   supplied then this is used instead of any function supplied via
+#'   \code{log_j}.
+#' @param user_args A list of numeric components. If \code{trans = "user"}
 #'   then \code{user_args} is a list providing arguments to the user-supplied
 #'   functions \code{phi_to_theta} and \code{log_j}.
 #' @param lambda Either
@@ -45,8 +73,8 @@
 #'       Box-Cox transformation (optional).}
 #'     \item{sd_psi}{A numeric vector.  Estimates of the marginal standard
 #'       deviations of the Box-Cox transformed variables (optional).}
-#'     \item{phi_to_theta}{as above (optional).}
-#'     \item{log_j}{as above (optional).}
+#'     \item{phi_to_theta}{As above (optional).}
+#'     \item{log_j}{As above (optional).}
 #'   }
 #'   This list may be created using \link{find_lambda_one_d} (for \code{d} = 1)
 #'   or \link{find_lambda} (for any \code{d}).
@@ -57,34 +85,49 @@
 #'   \code{lambda$gm} is supplied in input list \code{lambda} then
 #'   \code{lambda$gm} is used, not \code{gm}.
 #' @param rotate A logical scalar. If TRUE (\code{d} > 1 only) use Choleski
-#'   rotation.  If d = 1 and \code{rotate} = TRUE then rotate will be set to
-#'   FALSE with a warning.
+#'   rotation.  If d = 1 and \code{rotate = TRUE} then rotate will be set to
+#'   FALSE with a warning. See \strong{Details}.
 #' @param lower,upper Numeric vectors.  Lower/upper bounds on the arguments of
 #'   the function \emph{after} any transformation from theta to phi implied by
 #'   the inverse of \code{phi_to_theta}. If \code{rotate = FALSE} these
-#'   are used in all of the optimizations used to construct the bounding box.
+#'   are used in all of the optimisations used to construct the bounding box.
 #'   If \code{rotate = TRUE} then they are use only in the first optimisation
 #'   to maximise the target density.`
 #'   If \code{trans = "BC"} components of \code{lower} that are negative are
 #'   set to zero without warning and the bounds implied after the Box-Cox
 #'   transformation are calculated inside \code{ru}.
 #' @param r A numeric scalar.  Parameter of generalized ratio-of-uniforms.
-#' @param ep A numeric scalar.  Controls initial estimates for optimizations
-#'   to find the b-bounding box parameters.  The default (\code{ep}=0)
+#' @param ep A numeric scalar.  Controls initial estimates for optimisations
+#'   to find the \eqn{b}-bounding box parameters.  The default (\code{ep}=0)
 #'   corresponds to starting at the mode of \code{logf} small positive values
 #'   of \code{ep} move the constrained variable slightly away from the mode in
 #'   the correct direction.  If \code{ep} is negative its absolute value is
 #'   used, with no warning given.
-#' @param a_algor,b_algor Character scalars.  Either "nlminb" or "optim".
-#'   Respective optimization algorithms used to find a(r) and (bi-(r), bi+(r)).
+#' @param a_algor,b_algor Character scalars.  Either \code{"nlminb"} or
+#'   \code{"optim"}.
+#'   Respective optimisation algorithms used to find \eqn{a(r)} and
+#'   (\ifelse{html}{\eqn{b}\out{<sub>i</sub>}\out{<sup>-</sup>}(r)}{
+#'   \eqn{b_i^-(r)}},
+#'   \ifelse{html}{\eqn{b}\out{<sub>i</sub>}\out{<sup>+</sup>}(r)}{
+#'   \eqn{b_i^+(r)}}).
 #' @param a_method,b_method Character scalars.  Respective methods used by
-#'   \code{optim} to find a(r) and (bi-(r), bi+(r)).  Only used if \code{optim}
-#'   is the chosen algorithm.  If \code{d} = 1 then \code{a_method} and
-#'   \code{b_method} are set to \code{"Brent"} without warning.
+#'   \code{optim} to find \eqn{a(r)} and
+#'   (\ifelse{html}{\eqn{b}\out{<sub>i</sub>}\out{<sup>-</sup>}(r)}{
+#'   \eqn{b_i^-(r)}},
+#'   \ifelse{html}{\eqn{b}\out{<sub>i</sub>}\out{<sup>+</sup>}(r)}{
+#'   \eqn{b_i^+(r)}}).
+#'   Only used if \code{optim} is the chosen algorithm.  If \code{d} = 1 then
+#'   \code{a_method} and \code{b_method} are set to \code{"Brent"} without
+#'   warning.
 #' @param a_control,b_control  Lists of control arguments to \code{optim} or
-#'   \code{nlminb} to find a(r) and (bi-(r), bi+(r)) respectively.
-#' @param var_names A character vector.  Names to give to the column(s) of
-#'   the simulated values.
+#'   \code{nlminb} to find \eqn{a(r)} and
+#'   (\ifelse{html}{\eqn{b}\out{<sub>i</sub>}\out{<sup>-</sup>}(r)}{
+#'   \eqn{b_i^-(r)}},
+#'   \ifelse{html}{\eqn{b}\out{<sub>i</sub>}\out{<sup>+</sup>}(r)}{
+#'   \eqn{b_i^+(r)}})
+#'   respectively.
+#' @param var_names A character (or numeric) vector of length \code{d}.  Names
+#'   to give to the column(s) of the simulated values.
 #' @param shoof A numeric scalar in [0, 1].  Sometimes a spurious
 #'   non-zero convergence indicator is returned from
 #'   \code{\link[stats]{optim}} or \code{\link[stats]{nlminb}}).
@@ -98,7 +141,13 @@
 #'   value that is close to the current solution.
 #'   The exception to this is when the initial and current solutions are equal.
 #'   Then we start from the current solution multiplied by \code{1 - shoof}.
-#' @details If \code{trans = "none"} and \code{rotate = FALSE} then \code{ru}
+#' @details For information about the generalised ratio-of-uniforms method and
+#'   transformations see the
+#'   \href{https://paulnorthrop.github.io/rust/articles/rust-a-vignette.html}{
+#'   Introducing rust} vignette.  This can also be accessed using
+#'   \code{vignette("rust-a-vignette", package = "rust")}.
+#'
+#'   If \code{trans = "none"} and \code{rotate = FALSE} then \code{ru}
 #'   implements the (multivariate) generalized ratio of uniforms method
 #'   described in Wakefield, Gelfand and Smith (1991) using a target
 #'   density whose mode is relocated to the origin (`mode relocation') in the
@@ -132,10 +181,7 @@
 #'   The default value of the tuning parameter \code{r} is 1/2, which is
 #'   likely to be close to optimal in many cases, particularly if
 #'   \code{trans = "BC"}.
-#'
-#' See \code{vignette("rust-a-vignette", package = "rust")} for full details.
-#'
-#' @return An object of class "ru" is a list containing the following
+#' @return An object of class \code{"ru"} is a list containing the following
 #'   components:
 #'     \item{sim_vals}{An \code{n} by \code{d} matrix of simulated values.}
 #'     \item{box}{A (2 * \code{d} + 1) by \code{d} + 2 matrix of
@@ -153,11 +199,12 @@
 #'     }
 #'     \item{pa}{A numeric scalar.  An estimate of the probability of
 #'       acceptance.}
-#'     \item{d}{A numeric scalar.  The dimension of \code{logf}.}
+#'     \item{r}{The value of \code{r}.}
+#'     \item{d}{The value of \code{d}.}
 #'     \item{logf}{A function. \code{logf} supplied by the user, but
 #'       with f scaled by the maximum of the target density used in the
 #'       ratio-of-uniforms method (i.e. \code{logf_rho}), to avoid numerical
-#'       problems in contouring fin \code{\link{plot.ru}} when
+#'       problems in contouring f in \code{\link{plot.ru}} when
 #'       \code{d = 2}.}
 #'     \item{logf_rho}{A function. The target function actually used in the
 #'       ratio-of-uniforms algorithm.}
@@ -167,6 +214,11 @@
 #'     \item{f_mode}{The estimated mode of the target density f, after any
 #'       Box-Cox transformation and/or user supplied transformation, but before
 #'       mode relocation.}
+#'     \item{trans_fn}{An R function that performs the inverse transformation
+#'       from the transformed variable \eqn{\rho}, on which the generalised
+#'       ratio-of-uniforms method is performed, back to the original variable
+#'       \eqn{\theta}. \strong{Note}: \code{trans_fn} is \strong{not}
+#'       vectorised with respect to \eqn{\rho}.}
 #' @references Wakefield, J. C., Gelfand, A. E. and Smith, A. F. M. (1991)
 #'  Efficient generation of random variates via the ratio-of-uniforms method.
 #'  \emph{Statistics and Computing} (1991), \strong{1}, 129-133.
@@ -316,7 +368,6 @@
 #' # Bivariate normal x bivariate student-t
 #' log_norm_t <- function(x, mean = rep(0, d), sigma1 = diag(d), sigma2 = diag(d)) {
 #'   x <- matrix(x, ncol = length(x))
-#'   d <- ncol(x)
 #'   log_h1 <- -0.5 * (x - mean) %*% solve(sigma1) %*% t(x - mean)
 #'   log_h2 <- -2 * log(1 + 0.5 * x %*% solve(sigma2) %*% t(x))
 #'   return(log_h1 + log_h2)
@@ -335,6 +386,15 @@
 #' x <- ru(logf = log_norm_t, mean = y, sigma1 = covmat, sigma2 = covmat,
 #'   d = 2, n = 10000, init = y, rotate = TRUE)
 #' x$pa
+#'
+#' # Normal x log-normal: different Box-Cox parameters ==================
+#' norm_lognorm <- function(x, ...) {
+#'   dnorm(x[1], ...) + dlnorm(x[2], ...)
+#' }
+#' x <- ru(logf = norm_lognorm, log = TRUE, n = 1000, d = 2, init = c(-1, 0),
+#'         trans = "BC", lambda = c(1, 0))
+#' plot(x)
+#' plot(x, ru_scale = TRUE)
 #' }
 #' @seealso \code{\link{ru_rcpp}} for a version of \code{\link{ru}} that uses
 #'   the Rcpp package to improve efficiency.
@@ -355,7 +415,7 @@
 #' @seealso \code{\link[base]{chol}} for the Choleski decomposition.
 #'
 #' @export
-ru <- function(logf, ..., n = 1, d = 1, init = NULL,
+ru <- function(logf, ..., n = 1, d = 1, init = NULL, mode = NULL,
                trans = c("none", "BC", "user"),  phi_to_theta = NULL,
                log_j = NULL, user_args = list(), lambda = rep(1L, d),
                lambda_tol = 1e-6, gm = NULL,
@@ -379,6 +439,12 @@ ru <- function(logf, ..., n = 1, d = 1, init = NULL,
   # Check that the values of key arguments are suitable
   if (r < 0) {
     stop("r must be non-negative")
+  }
+  # Check var_names
+  if (!is.null(var_names)) {
+    if (length(var_names) != d) {
+      stop("''var_names'' must have length ''d''")
+    }
   }
   #
   a_algor <- match.arg(a_algor, c("optim", "nlminb"))
@@ -450,7 +516,7 @@ ru <- function(logf, ..., n = 1, d = 1, init = NULL,
     upper <- ifelse(lambda == 0, gm * log(upper),
                     (upper^lambda - 1) / (lambda * gm ^ (lambda -1)))
   }
-  # Check that the optimization algorithm is appropriate given the bounds in
+  # Check that the optimisation algorithm is appropriate given the bounds in
   # lower and upper.  If not then change it, with a warning.
   if (d == 1 & a_algor == "optim" & any(is.infinite(c(lower,upper)))) {
     a_algor = "nlminb"
@@ -482,6 +548,13 @@ ru <- function(logf, ..., n = 1, d = 1, init = NULL,
   } else {
     which_lam <- which(lambda != 1L)
   }
+  # If mode has been supplied then set init = mode
+  if (!is.null(mode)) {
+    if (length(mode) != d) {
+      stop("''mode'' should be a vector of length ''d''")
+    }
+    init <- mode
+  }
   # If no initial estimates have been supplied then use a vector of ones.
   if (is.null(init)) {
     init <- rep(1, d)
@@ -494,19 +567,19 @@ ru <- function(logf, ..., n = 1, d = 1, init = NULL,
     warning("d > 1 but init has length 1: a d-vector of inits has been used")
   }
   if (len_init != d & len_init != 1) {
-      stop("the length of init is incompatible with d")
+      stop("The length of init is incompatible with d")
   }
   # The option rotate = TRUE is not relevant when d = 1
   if (d == 1 & rotate) {
     rotate <- FALSE
-    warning("rotation is not relevant when d=1: no rotation is used")
+    warning("Rotation is not relevant when d=1: no rotation is used")
   }
   ep <- abs(ep)
   # Objects to store the values underlying the ru box and convergence
   # indicators.
   #   vals: will contain the values of the variables at which
   #         the ru box dimensions occur.
-  #   conv: will contain the corresponding covergence indicators returned by
+  #   conv: will contain the corresponding convergence indicators returned by
   #         the optimisation algorithms.
   vals <- matrix(NA, ncol = d, nrow = 2 * d + 1)
   colnames(vals) <- paste("vals", 1:d, sep="")
@@ -559,6 +632,9 @@ ru <- function(logf, ..., n = 1, d = 1, init = NULL,
       val <- logf(theta, ...) - hscale
       structure(val, theta = theta)
     }
+    trans_fn <- function(._rho) {
+      return(rho_to_psi(._rho))
+    }
   }
   if (trans == "BC") {
     logf_rho <- function(._rho, ...) {
@@ -567,10 +643,17 @@ ru <- function(logf, ..., n = 1, d = 1, init = NULL,
       test <- (psi * const + 1)[which_lam]
       if (any(test <= 0)) return(-Inf)
       phi <- psi_to_phi(psi)
-      theta <- phi_to_theta(phi)
+      theta <- do.call(phi_to_theta, c(list(phi), user_args))
+      if (any(!is.finite(theta))) return(-Inf)
       log_bc_jac <- sum((lambda - 1)[which_lam] * log(phi[which_lam]))
-      val <- logf(theta, ...) - log_bc_jac - log_j(theta) - hscale
+      logj <- do.call(log_j, c(list(theta), user_args))
+      val <- logf(theta, ...) - log_bc_jac - logj - hscale
       structure(val, theta = theta)
+    }
+    trans_fn <- function(._rho) {
+      psi <- rho_to_psi(._rho)
+      phi <- psi_to_phi(psi)
+      return(do.call(phi_to_theta, c(list(phi), user_args)))
     }
   }
   if (trans == "user") {
@@ -581,6 +664,10 @@ ru <- function(logf, ..., n = 1, d = 1, init = NULL,
       logj <- do.call(log_j, c(list(theta), user_args))
       val <- logf(theta, ...) - logj - hscale
       structure(val, theta = theta)
+    }
+    trans_fn <- function(._rho) {
+      phi <- rho_to_psi(._rho)
+      return(do.call(phi_to_theta, c(list(phi), user_args)))
     }
   }
   neg_logf_rho <- function(._rho, ...) -logf_rho(._rho, ...)
@@ -594,12 +681,21 @@ ru <- function(logf, ..., n = 1, d = 1, init = NULL,
   }
   #
   # Calculate a(r) ----------------------------------
-  # Create list of arguments for find_a()
-  for_find_a <- list(neg_logf_rho = neg_logf_rho, init_psi = init_psi, d = d,
-                     r = r, lower = lower, upper = upper, algor = a_algor,
-                     method = a_method, control = a_control, shoof = shoof,
-                     ...)
-  temp <- do.call("find_a", for_find_a)
+  # If mode is supplied then assume it is correct and calculate the Hessian
+  if (is.null(mode)) {
+    # Create list of arguments for find_a()
+    for_find_a <- list(neg_logf_rho = neg_logf_rho, init_psi = init_psi, d = d,
+                       r = r, lower = lower, upper = upper, algor = a_algor,
+                       method = a_method, control = a_control, shoof = shoof,
+                       ...)
+    temp <- do.call("find_a", for_find_a)
+  } else {
+    a_obj <- function(x) {
+      return(neg_logf_rho(x, ...) / (d * r + 1))
+    }
+    temp <- list(par = mode, convergence = 0,
+                 hessian = try(stats::optimHess(mode, a_obj), silent = TRUE))
+  }
   #
   # Check that logf is finite at 0
   #
@@ -683,7 +779,7 @@ ru <- function(logf, ..., n = 1, d = 1, init = NULL,
   l_box <- temp$l_box
   u_box <- temp$u_box
   #
-  # Perform ratio-of-uniforms rejection samping ---------------
+  # Perform ratio-of-uniforms rejection sampling ---------------
   #
   n_try <- n_acc <- 0L     # initialize number of tries and accepted values
   res <- list()            # list to return posterior sample and other stuff
@@ -710,7 +806,7 @@ ru <- function(logf, ..., n = 1, d = 1, init = NULL,
   #-----------------------------------------# end of while (n_acc < n_sim) loop
   box <- c(a_box, l_box, u_box)
   res$box <- cbind(box, vals, conv)
-  bs <- paste(paste("b", 1:d, sep=""),rep(c("minus", "plus"), each=d), sep="")
+  bs <- paste(paste("b", 1:d, sep=""), rep(c("minus", "plus"), each=d), sep="")
   rownames(res$box) <- c("a", bs)
   res$pa <- n_acc / n_try
   if (any(conv != 0)) {
@@ -727,7 +823,9 @@ ru <- function(logf, ..., n = 1, d = 1, init = NULL,
   res$logf_args <- list(...)
   res$logf_rho <- logf_rho
   res$f_mode <- f_mode
+  res$trans_fn <- trans_fn
   res$call <- Call
+  res$r <- r
   class(res) <- "ru"
   return(res)
 }

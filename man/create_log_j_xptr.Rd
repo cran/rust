@@ -2,7 +2,7 @@
 % Please edit documentation in R/RcppExports.R
 \name{create_log_j_xptr}
 \alias{create_log_j_xptr}
-\title{Create external pointer to a C++ function for log_j}
+\title{Create external pointer to a C++ function for \code{log_j}}
 \usage{
 create_log_j_xptr(fstr)
 }
@@ -10,5 +10,14 @@ create_log_j_xptr(fstr)
 \item{fstr}{A string indicating the C++ function required.}
 }
 \description{
-Create external pointer to a C++ function for log_j
+Create external pointer to a C++ function for \code{log_j}
 }
+\details{
+See the \href{https://cran.r-project.org/package=rust}{
+Rusting faster: Simulation using Rcpp} vignette.
+}
+\section{Examples}{
+
+See the examples in \code{\link{ru_rcpp}}.
+}
+

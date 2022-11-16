@@ -10,6 +10,11 @@ using namespace Rcpp;
 // Miscellaneous functions.
 
 // [[Rcpp::export]]
+bool any_infinite(const Rcpp::NumericVector& x) {
+  return Rcpp::is_true(Rcpp::any(Rcpp::is_infinite(x)));
+}
+
+// [[Rcpp::export]]
 bool any_naC(const Rcpp::NumericVector& x) {
   return Rcpp::is_true(Rcpp::any(Rcpp::is_na(x)));
 }
@@ -157,6 +162,14 @@ double cpp_logf_rho(const arma::vec& rho, const arma::vec& psi_mode,
   return val ;
 }
 
+// Transformation function 1
+
+// [[Rcpp::export]]
+arma::vec trans1(const arma::vec& rho, const arma::vec& psi_mode,
+                 const arma::mat& rot_mat) {
+  return cpp_rho_to_psi(rho, psi_mode, rot_mat) ;
+}
+
 // Case 2: Box-Cox, rotation and relocation.
 
 // [[Rcpp::export]]
@@ -191,12 +204,37 @@ double cpp_logf_rho_2(const arma::vec& rho, const arma::vec& psi_mode,
     return R_NegInf ;
   }
   phi = psi_to_phi_fun(psi, lambda, gm, con) ;
+  if (any_infinite(phi)) {
+    return R_NegInf ;
+  }
   phi2 = phi[which_lam] ;
   temp = Rcpp::log(phi2) ;
   temp2 = lambda[which_lam] ;
   log_bc_jac = sum((temp2 - 1.0) * temp) ;
   val = fun(phi, pars) - log_bc_jac - hscale ;
   return val ;
+}
+
+// Transformation function 2
+
+// [[Rcpp::export]]
+arma::vec trans2(const arma::vec& rho, const arma::vec& psi_mode,
+                 const arma::mat& rot_mat, const Rcpp::List& tpars,
+                 const SEXP& ptpfun) {
+  Rcpp::NumericVector phi, psi ;
+  psi = cpp_rho_to_psi(rho, psi_mode, rot_mat) ;
+  // Unwrap pointer to psi_to_phi transformation function.
+  typedef Rcpp::NumericVector (*ptpPtr)(const Rcpp::NumericVector& psi,
+                               const Rcpp::NumericVector& lambda,
+                               const Rcpp::NumericVector& gm,
+                               const Rcpp::NumericVector& con) ;
+  Rcpp::NumericVector lambda = tpars["lambda"] ;
+  Rcpp::NumericVector gm = tpars["gm"] ;
+  Rcpp::NumericVector con = tpars["con"] ;
+  Rcpp::XPtr<ptpPtr> xptpfun(ptpfun) ;
+  ptpPtr psi_to_phi_fun = *xptpfun ;
+  phi = psi_to_phi_fun(psi, lambda, gm, con) ;
+  return phi ;
 }
 
 // Case 3: Transformation to positivity, Box-Cox, rotation and relocation.
@@ -244,6 +282,9 @@ double cpp_logf_rho_3(const arma::vec& rho, const arma::vec& psi_mode,
   }
   phi = psi_to_phi_fun(psi, lambda, gm, con) ;
   theta = phi_to_theta_fun(phi, user_args) ;
+  if (any_infinite(theta)) {
+    return R_NegInf ;
+  }
   if (any_naC(theta)) {
     return R_NegInf ;
   }
@@ -254,6 +295,33 @@ double cpp_logf_rho_3(const arma::vec& rho, const arma::vec& psi_mode,
   log_bc_jac = sum((temp2 - 1.0) * temp) ;
   val = fun(theta, pars) - log_bc_jac - logj - hscale ;
   return val ;
+}
+
+// [[Rcpp::export]]
+arma::vec trans3(const arma::vec& rho, const arma::vec& psi_mode,
+                 const arma::mat& rot_mat, const Rcpp::List& tpars,
+                 const SEXP& ptpfun, const SEXP& phi_to_theta,
+                 const Rcpp::List& user_args) {
+  Rcpp::NumericVector theta, phi, psi ;
+  psi = cpp_rho_to_psi(rho, psi_mode, rot_mat) ;
+  // Unwrap pointer to psi_to_phi transformation function.
+  typedef Rcpp::NumericVector (*ptpPtr)(const Rcpp::NumericVector& psi,
+                               const Rcpp::NumericVector& lambda,
+                               const Rcpp::NumericVector& gm,
+                               const Rcpp::NumericVector& con) ;
+  Rcpp::NumericVector lambda = tpars["lambda"] ;
+  Rcpp::NumericVector gm = tpars["gm"] ;
+  Rcpp::NumericVector con = tpars["con"] ;
+  Rcpp::XPtr<ptpPtr> xptpfun(ptpfun) ;
+  ptpPtr psi_to_phi_fun = *xptpfun ;
+  phi = psi_to_phi_fun(psi, lambda, gm, con) ;
+  // Unwrap pointer to phi_to_theta transformation function.
+  typedef Rcpp::NumericVector (*pttPtr)(const Rcpp::NumericVector& phi,
+                               const Rcpp::List& user_args) ;
+  Rcpp::XPtr<pttPtr> xpttfun(phi_to_theta) ;
+  pttPtr phi_to_theta_fun = *xpttfun ;
+  theta = phi_to_theta_fun(phi, user_args) ;
+  return theta ;
 }
 
 // Case 4: User-supplied transformation, rotation and relocation.
@@ -284,12 +352,30 @@ double cpp_logf_rho_4(const arma::vec& rho, const arma::vec& psi_mode,
   double val, logj ;
   phi = cpp_rho_to_psi(rho, psi_mode, rot_mat) ;
   theta = phi_to_theta_fun(phi, user_args) ;
+  if (any_infinite(theta)) {
+    return R_NegInf ;
+  }
   if (any_naC(theta)) {
     return R_NegInf ;
   }
   logj = log_j_fun(theta, user_args) ;
   val = fun(theta, pars) - logj - hscale ;
   return val ;
+}
+
+// [[Rcpp::export]]
+arma::vec trans4(const arma::vec& rho, const arma::vec& psi_mode,
+                 const arma::mat& rot_mat, const SEXP& ptpfun,
+                 const SEXP& phi_to_theta, const Rcpp::List& user_args) {
+  Rcpp::NumericVector theta, phi, psi ;
+  phi = cpp_rho_to_psi(rho, psi_mode, rot_mat) ;
+  // Unwrap pointer to phi_to_theta transformation function.
+  typedef Rcpp::NumericVector (*pttPtr)(const Rcpp::NumericVector& phi,
+                               const Rcpp::List& user_args) ;
+  Rcpp::XPtr<pttPtr> xpttfun(phi_to_theta) ;
+  pttPtr phi_to_theta_fun = *xpttfun ;
+  theta = phi_to_theta_fun(phi, user_args) ;
+  return theta ;
 }
 
 // Function to vectorize cpp_logf_rho_4() for use in find_lambda_rcpp()
@@ -473,7 +559,8 @@ Rcpp::List ru_cpp(const int& n, const int& d, const double& r,
                   const Rcpp::NumericVector& u_box, const SEXP& logf,
                   const arma::vec& psi_mode, const arma::mat& rot_mat,
                   const double& hscale, const Rcpp::List& pars) {
-  RNGScope scope; // ensure RNG gets set/reset
+  // ensure RNG gets set/reset
+  RNGScope scope;
   // Unwrap pointer to untransformed target log-density.
   typedef double (*funcPtr)(const Rcpp::NumericVector& x,
                   const Rcpp::List& pars) ;
@@ -489,7 +576,7 @@ Rcpp::List ru_cpp(const int& n, const int& d, const double& r,
     if (ntry % 1000 == 0) {
       Rcpp::checkUserInterrupt();
     }
-    u = runif(1, 0, a_box)[0] ;
+    u = Rcpp::runif(1, 0, a_box)[0] ;
     vs = d_box * Rcpp::runif(d) + l_box ;
     rho = vs / pow(u, r) ;
     theta = cpp_rho_to_psi(rho, psi_mode, rot_mat) ;
@@ -501,9 +588,9 @@ Rcpp::List ru_cpp(const int& n, const int& d, const double& r,
       nacc++ ;
     }
   }
-  return List::create(Named("sim_vals_rho") = sim_vals_rho,
-                      Named("sim_vals") = sim_vals,
-                      Named("ntry") = ntry) ;
+  return List::create(_("sim_vals_rho") = sim_vals_rho,
+                      _("sim_vals") = sim_vals,
+                      _("ntry") = ntry) ;
 }
 
 // [[Rcpp::export]]
@@ -515,7 +602,8 @@ Rcpp::List ru_cpp_2(const int& n, const int& d, const double& r,
                     const Rcpp::List& pars, const Rcpp::List& tpars,
                     const SEXP& ptpfun, const SEXP& phi_to_theta,
                     const SEXP& log_j, const Rcpp::List& user_args) {
-  RNGScope scope; // ensure RNG gets set/reset
+  // ensure RNG gets set/reset
+  RNGScope scope;
   // Unwrap pointer to untransformed target log-density.
   typedef double (*funcPtr)(const Rcpp::NumericVector& x,
                   const Rcpp::List& pars) ;
@@ -542,7 +630,7 @@ Rcpp::List ru_cpp_2(const int& n, const int& d, const double& r,
     if (ntry % 1000 == 0) {
       Rcpp::checkUserInterrupt();
     }
-    u = runif(1, 0, a_box)[0] ;
+    u = Rcpp::runif(1, 0, a_box)[0] ;
     vs = d_box * Rcpp::runif(d) + l_box ;
     rho = vs / pow(u, r) ;
     psi = cpp_rho_to_psi(rho, psi_mode, rot_mat) ;
@@ -563,9 +651,9 @@ Rcpp::List ru_cpp_2(const int& n, const int& d, const double& r,
       }
     }
   }
-  return List::create(Named("sim_vals_rho") = sim_vals_rho,
-                      Named("sim_vals") = sim_vals,
-                      Named("ntry") = ntry) ;
+  return List::create(_("sim_vals_rho") = sim_vals_rho,
+                      _("sim_vals") = sim_vals,
+                      _("ntry") = ntry) ;
 }
 
 // [[Rcpp::export]]
@@ -577,7 +665,8 @@ Rcpp::List ru_cpp_3(const int& n, const int& d, const double& r,
                     const Rcpp::List& pars, const Rcpp::List& tpars,
                     const SEXP& ptpfun, const SEXP& phi_to_theta,
                     const SEXP& log_j, const Rcpp::List& user_args) {
-  RNGScope scope; // ensure RNG gets set/reset
+  // ensure RNG gets set/reset
+  RNGScope scope;
   // Unwrap pointer to untransformed target log-density.
   typedef double (*funcPtr)(const Rcpp::NumericVector& x,
                   const Rcpp::List& pars) ;
@@ -614,7 +703,7 @@ Rcpp::List ru_cpp_3(const int& n, const int& d, const double& r,
     if (ntry % 1000 == 0) {
       Rcpp::checkUserInterrupt();
     }
-    u = runif(1, 0, a_box)[0] ;
+    u = Rcpp::runif(1, 0, a_box)[0] ;
     vs = d_box * Rcpp::runif(d) + l_box ;
     rho = vs / pow(u, r) ;
     psi = cpp_rho_to_psi(rho, psi_mode, rot_mat) ;
@@ -639,9 +728,9 @@ Rcpp::List ru_cpp_3(const int& n, const int& d, const double& r,
       }
     }
   }
-  return List::create(Named("sim_vals_rho") = sim_vals_rho,
-                      Named("sim_vals") = sim_vals,
-                      Named("ntry") = ntry) ;
+  return List::create(_("sim_vals_rho") = sim_vals_rho,
+                      _("sim_vals") = sim_vals,
+                      _("ntry") = ntry) ;
 }
 
 // [[Rcpp::export]]
@@ -653,7 +742,8 @@ Rcpp::List ru_cpp_4(const int& n, const int& d, const double& r,
                     const Rcpp::List& pars, const Rcpp::List& tpars,
                     const SEXP& ptpfun, const SEXP& phi_to_theta,
                     const SEXP& log_j, const Rcpp::List& user_args) {
-  RNGScope scope; // ensure RNG gets set/reset
+  // ensure RNG gets set/reset
+  RNGScope scope;
   // Unwrap pointer to untransformed target log-density.
   typedef double (*funcPtr)(const Rcpp::NumericVector& x,
                   const Rcpp::List& pars) ;
@@ -679,7 +769,7 @@ Rcpp::List ru_cpp_4(const int& n, const int& d, const double& r,
     if (ntry % 1000 == 0) {
       Rcpp::checkUserInterrupt();
     }
-    u = runif(1, 0, a_box)[0] ;
+    u = Rcpp::runif(1, 0, a_box)[0] ;
     vs = d_box * Rcpp::runif(d) + l_box ;
     rho = vs / pow(u, r) ;
     phi = cpp_rho_to_psi(rho, psi_mode, rot_mat) ;
@@ -695,9 +785,9 @@ Rcpp::List ru_cpp_4(const int& n, const int& d, const double& r,
       }
     }
   }
-  return List::create(Named("sim_vals_rho") = sim_vals_rho,
-                      Named("sim_vals") = sim_vals,
-                      Named("ntry") = ntry) ;
+  return List::create(_("sim_vals_rho") = sim_vals_rho,
+                      _("sim_vals") = sim_vals,
+                      _("ntry") = ntry) ;
 }
 
 // [[Rcpp::export]]

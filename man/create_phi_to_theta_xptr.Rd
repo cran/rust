@@ -2,7 +2,7 @@
 % Please edit documentation in R/RcppExports.R
 \name{create_phi_to_theta_xptr}
 \alias{create_phi_to_theta_xptr}
-\title{Create external pointer to a C++ function for phi_to_theta}
+\title{Create external pointer to a C++ function for \code{phi_to_theta}}
 \usage{
 create_phi_to_theta_xptr(fstr)
 }
@@ -10,5 +10,14 @@ create_phi_to_theta_xptr(fstr)
 \item{fstr}{A string indicating the C++ function required.}
 }
 \description{
-Create external pointer to a C++ function for phi_to_theta
+Create external pointer to a C++ function for \code{phi_to_theta}
 }
+\details{
+See the \href{https://cran.r-project.org/package=rust}{
+Rusting faster: Simulation using Rcpp} vignette.
+}
+\section{Examples}{
+
+See the examples in \code{\link{ru_rcpp}}.
+}
+

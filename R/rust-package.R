@@ -10,15 +10,30 @@
 #'   \code{\link{ru_rcpp}}, which implement the generalized ratio-of-uniforms
 #'   algorithm.  The latter uses the Rcpp package to improve efficiency.
 #'   Also provided are two functions,
-#'   \code{find_lambda} and \code{find_lambda_one_d}, that may be used to
-#'   set a suitable value for the parameter \code{lambda} if Box-Cox
+#'   \code{\link{find_lambda}} and \code{\link{find_lambda_one_d}}, that may be
+#'   used to set a suitable value for the parameter \code{lambda} if Box-Cox
 #'   transformation is used prior to simulation.
 #'   If \code{\link{ru_rcpp}} is used the equivalent functions are
 #'   \code{find_lambda_rcpp} and \code{find_lambda_one_d_rcpp}
 #'   Basic \code{plot} and \code{summary} methods are also provided.
 #'
-#' See \code{vignette("rust-a-vignette", package = "rust")} for an overview of
-#' the package.
+#' See the following package vignettes for information:
+#' \itemize{
+#'   \item{
+#'    \href{https://paulnorthrop.github.io/rust/articles/rust-a-vignette.html}{
+#'    Introducing rust} or \code{vignette("rust-a-vignette", package = "rust")}.
+#'   }
+#'   \item{
+#'    \href{https://paulnorthrop.github.io/rust/articles/rust-b-when-to-use-vignette.html}{
+#'    When can rust be used?} or
+#'    \code{vignette("rust-b-when-to-use-vignette", package = "rust")}.
+#'   }
+#'   \item{
+#'    \href{https://paulnorthrop.github.io/rust/articles/rust-c-using-rcpp-vignette.html}{
+#'    Rusting faster: Simulation using Rcpp} or
+#'    \code{vignette("rust-c-using-rcpp-vignette", package = "rust")}.
+#'   }
+#' }
 #'
 #' @references Wakefield, J. C., Gelfand, A. E. and Smith, A. F. M. Efficient
 #'  generation of random variates via the ratio-of-uniforms method. Statistics
@@ -48,8 +63,7 @@
 #'   \code{d}.
 #'
 #' @docType package
-#' @name rust
 #' @importFrom stats runif
 #' @useDynLib rust, .registration = TRUE
 #' @importFrom Rcpp sourceCpp
-NULL
+"_PACKAGE"

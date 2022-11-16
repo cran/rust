@@ -2,14 +2,14 @@
 
 #' Plot diagnostics for an ru object
 #'
-#' \code{plot} method for class "ru".  For \code{d = 1} a histogram of the
-#'   simulated values is plotted with a the density function superimposed.
-#'   The density is normalized crudely using the trapezium rule.  For
-#'   \code{d = 2} a scatter plot of the simulated values is produced with
-#'   density contours superimposed.  For \code{d > 2} pairwise plots of the
-#'   simulated values are produced.
+#' \code{plot} method for class \code{"ru"}.  For \code{d = 1} a histogram of
+#' the simulated values is plotted with a the density function superimposed.
+#' The density is normalized crudely using the trapezium rule.  For
+#' \code{d = 2} a scatter plot of the simulated values is produced with
+#' density contours superimposed.  For \code{d > 2} pairwise plots of the
+#' simulated values are produced.
 #'
-#' @param x an object of class "ru", a result of a call to \code{ru}.
+#' @param x an object of class \code{"ru"}, a result of a call to \code{ru}.
 #' @param y Not used.
 #' @param ... Additional arguments passed on to \code{hist}, \code{lines},
 #'   \code{contour} or \code{points}.
@@ -20,35 +20,37 @@
 #'      method used to normalize the density.}
 #'   \item {For d = 2 : an n by n regular grid is used to contour the density.}
 #' }
-#' @param prob Numeric vector. Only relevant for d = 2.  The contour lines are
-#'   drawn such that the respective probabilities that the variable lies
-#'   within the contour are approximately prob.
+#' @param prob Numeric vector. Only relevant for \code{d = 2}.  The contour
+#'   lines are drawn such that the respective probabilities that the variable
+#'   lies within the contour are approximately equal to the values in
+#'   \code{prob}.
 #' @param ru_scale A logical scalar.  Should we plot data and density on the
-#'   scale used in the ratio-of-uniforms algorithm (TRUE) or on the original
-#'   scale (FALSE)?
-#' @param rows A numeric scalar.  When \code{d} > 2 this sets the number of
+#'   scale used in the ratio-of-uniforms algorithm (\code{TRUE}) or on the
+#'   original scale (\code{FALSE})?
+#' @param rows A numeric scalar.  When \code{d > 2} this sets the number of
 #'   rows of plots.  If the user doesn't provide this then it is set
 #'   internally.
-#' @param xlabs,ylabs Numeric vectors.  When \code{d} > 2 these set the labels
+#' @param xlabs,ylabs Numeric vectors.  When \code{d > 2} these set the labels
 #'   on the x and y axes respectively.  If the user doesn't provide these then
 #'   the column names of the simulated data matrix to be plotted are used.
+#' @param var_names A character (or numeric) vector of length \code{x$d}. This
+#'   argument can be used to replace variable names set using \code{var_names}
+#'   in the call to \code{\link{ru}} or \code{\link{ru_rcpp}}.
 #' @param points_par A list of arguments to pass to
 #'   \code{\link[graphics]{points}} to control the appearance of points
 #'   depicting the simulated values. Only relevant when \code{d = 2}.
+#' @return No return value, only the plot is produced.
 #' @examples
 #' # Log-normal density ----------------
 #' x <- ru(logf = dlnorm, log = TRUE, d = 1, n = 1000, lower = 0, init = 1)
-#'
 #' \donttest{
 #' plot(x)
 #' }
-#'
 #' # Improve appearance using arguments to plot() and hist()
 #' \donttest{
 #' plot(x, breaks = seq(0, ceiling(max(x$sim_vals)), by = 0.25),
 #'   xlim = c(0, 10))
 #' }
-#'
 #' # Two-dimensional normal with positive association ----------------
 #' rho <- 0.9
 #' covmat <- matrix(c(1, rho, rho, 1), 2, 2)
@@ -58,7 +60,6 @@
 #'   - 0.5 * (x - mean) %*% solve(sigma) %*% t(x - mean)
 #' }
 #' x <- ru(logf = log_dmvnorm, sigma = covmat, d = 2, n = 1000, init = c(0, 0))
-#'
 #' \donttest{
 #' plot(x)
 #' }
@@ -68,12 +69,20 @@
 plot.ru <- function(x, y, ..., n = ifelse(x$d == 1, 1001, 101),
                     prob = c(0.1, 0.25, 0.5, 0.75, 0.95, 0.99),
                     ru_scale = FALSE, rows = NULL, xlabs = NULL,
-                    ylabs = NULL, points_par = list(col = 8)) {
+                    ylabs = NULL, var_names = NULL,
+                    points_par = list(col = 8)) {
   if (!inherits(x, "ru")) {
     stop("use only with \"ru\" objects")
   }
   if (n < 1) {
     stop("n must be no smaller than 1")
+  }
+  # Check var_names
+  if (!is.null(var_names)) {
+    if (length(var_names) != x$d) {
+      stop("''var_names'' must have length ''x$d''")
+    }
+    colnames(x$sim_vals) <- var_names
   }
   if (ru_scale) {
     plot_data <- x$sim_vals_rho
@@ -177,19 +186,12 @@ plot.ru <- function(x, y, ..., n = ifelse(x$d == 1, 1001, 101),
       rows <- x$d - 2
     }
     cols <- ceiling(choose(x$d, 2) / rows)
-    if (is.null(xlabs)) {
-      if (!is.null(colnames(plot_data))) {
-        xlabs <- colnames(plot_data)
-      } else {
-        xlabs <- rep(NA, x$d)
-      }
-    }
-    if (is.null(ylabs)) {
-      if (!is.null(colnames(plot_data))) {
-        ylabs <- colnames(plot_data)
-      } else {
-        ylabs <- rep(NA, x$d)
-      }
+    if (!is.null(colnames(plot_data))) {
+      xlabs <- colnames(plot_data)
+      ylabs <- colnames(plot_data)
+    } else {
+      xlabs <- rep(NA, x$d)
+      ylabs <- rep(NA, x$d)
     }
     oldpar <- graphics::par(mfrow = c(rows, cols))
     on.exit(graphics::par(oldpar))
@@ -204,21 +206,27 @@ plot.ru <- function(x, y, ..., n = ifelse(x$d == 1, 1001, 101),
     }
     pairwise_plots(plot_data)
   }
+  return(invisible())
 }
 
 # =========================== summary.ru ===========================
 
 #' Summarizing ratio-of-uniforms samples
 #'
-#' \code{summary} method for class "ru"
+#' \code{summary} method for class \code{"ru"}.
 #'
-#' @param object an object of class "ru", a result of a call to \code{ru}.
-#' @param ... Additional arguments passed on to \code{summary}.
-#' @return Prints
+#' @param object an object of class \code{"ru"}, a result of a call to
+#'   \code{ru}.
+#' @param ... For \code{summary.lm}: additional arguments passed to
+#'   \code{\link{summary}}.
+#'   For \code{print.lm}: additional optional arguments passed to
+#'   \code{\link{print}}.
+#' @return For \code{summary.lm}: a list of the following components from
+#'   \code{object}:
 #' \itemize{
-#'   \item {information about the ratio-of-uniforms bounding box, i.e.
+#'   \item {information about the ratio-of-uniforms bounding box, i.e.,
 #'     \code{object$box}}
-#'   \item {an estimate of the probability of acceptance, i.e.
+#'   \item {an estimate of the probability of acceptance, i.e.,
 #'     \code{object$pa}}
 #'   \item {a summary of the simulated values, via
 #'     \code{summary(object$sim_vals)}}
@@ -241,6 +249,7 @@ plot.ru <- function(x, y, ..., n = ifelse(x$d == 1, 1001, 101),
 #' @seealso \code{\link{ru}} for descriptions of \code{object$sim_vals} and
 #'   \code{object$box}.
 #' @seealso \code{\link{plot.ru}} for a diagnostic plot.
+#' @name summary.ru
 #' @export
 summary.ru <- function(object, ...) {
   if (!inherits(object, "ru")) {
@@ -255,44 +264,15 @@ summary.ru <- function(object, ...) {
 
 # =========================== print.summary.ru ===========================
 
-#' Print method for objects of class "summary.ru"
+#' Print method for objects of class \code{"summary.ru"}
 #'
-#' \code{print} method for an object \code{object} of class "summary.ru".
+#' \code{print} method for an object \code{object} of class
+#' \code{"summary.ru"}.
 #'
-#' @param x an object of class "summary.ru", a result of a call to
+#' @param x an object of class \code{"summary.ru"}, a result of a call to
 #'   \code{\link{summary.ru}}.
-#' @param ... Additional optional arguments to be passed to
-#'   \code{\link{print}}.
-#'
-#' @return Prints
-#' \itemize{
-#'   \item {a summary of the simulated values, via
-#'     \code{summary(object$sim_vals)}}
-#'   \item {an estimate of the probability of acceptance, i.e.
-#'     \code{object$pa}}
-#'   \item {information about the ratio-of-uniforms bounding box, i.e.
-#'     \code{object$box}}
-#' }
-#' @examples
-#' # one-dimensional standard normal ----------------
-#' x <- ru(logf = function(x) -x ^ 2 / 2, d = 1, n = 1000, init = 0)
-#' summary(x)
-#'
-#' # two-dimensional normal with positive association ----------------
-#' rho <- 0.9
-#' covmat <- matrix(c(1, rho, rho, 1), 2, 2)
-#' log_dmvnorm <- function(x, mean = rep(0, d), sigma = diag(d)) {
-#'   x <- matrix(x, ncol = length(x))
-#'   d <- ncol(x)
-#'   - 0.5 * (x - mean) %*% solve(sigma) %*% t(x - mean)
-#' }
-#' x <- ru(logf = log_dmvnorm, sigma = covmat, d = 2, n = 1000, init = c(0, 0))
-#' summary(x)
-#' @seealso \code{\link{summary.ru}} for summaries of the simulated values
-#'   and properties of the ratio-of-uniforms algorithm.
-#' @seealso \code{\link{plot.ru}} for a diagnostic plot.
-#' @seealso \code{\link{ru}} for descriptions of \code{object$sim_vals} and
-#'   \code{object$box}.
+#' @return For \code{print.summary.ru}: the argument \code{x}, invisibly.
+#' @rdname summary.ru
 #' @export
 print.summary.ru <- function(x, ...) {
   if (!inherits(x, "summary.ru")) {
@@ -319,8 +299,7 @@ print.summary.ru <- function(x, ...) {
 #'   \code{\link{ru}} or \code{\link{ru_rcpp}}.
 #' @param ... Additional arguments.  None are used in this function.
 #' @details Simply prints the call to \code{ru} or \code{ru_rcpp}.
-#' @return The argument \code{x}, invisibly, as for all
-#'   \code{\link[base]{print}} methods.
+#' @return The argument \code{x}, invisibly.
 #' @seealso \code{\link{summary.ru}} for summaries of the simulated values
 #'   and properties of the ratio-of-uniforms algorithm.
 #' @seealso \code{\link{plot.ru}} for a diagnostic plot.

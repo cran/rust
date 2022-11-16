@@ -14,11 +14,12 @@
   rows = NULL,
   xlabs = NULL,
   ylabs = NULL,
+  var_names = NULL,
   points_par = list(col = 8)
 )
 }
 \arguments{
-\item{x}{an object of class "ru", a result of a call to \code{ru}.}
+\item{x}{an object of class \code{"ru"}, a result of a call to \code{ru}.}
 
 \item{y}{Not used.}
 
@@ -33,48 +34,53 @@
   \item {For d = 2 : an n by n regular grid is used to contour the density.}
 }}
 
-\item{prob}{Numeric vector. Only relevant for d = 2.  The contour lines are
-drawn such that the respective probabilities that the variable lies
-within the contour are approximately prob.}
+\item{prob}{Numeric vector. Only relevant for \code{d = 2}.  The contour
+lines are drawn such that the respective probabilities that the variable
+lies within the contour are approximately equal to the values in
+\code{prob}.}
 
 \item{ru_scale}{A logical scalar.  Should we plot data and density on the
-scale used in the ratio-of-uniforms algorithm (TRUE) or on the original
-scale (FALSE)?}
+scale used in the ratio-of-uniforms algorithm (\code{TRUE}) or on the
+original scale (\code{FALSE})?}
 
-\item{rows}{A numeric scalar.  When \code{d} > 2 this sets the number of
+\item{rows}{A numeric scalar.  When \code{d > 2} this sets the number of
 rows of plots.  If the user doesn't provide this then it is set
 internally.}
 
-\item{xlabs, ylabs}{Numeric vectors.  When \code{d} > 2 these set the labels
+\item{xlabs, ylabs}{Numeric vectors.  When \code{d > 2} these set the labels
 on the x and y axes respectively.  If the user doesn't provide these then
 the column names of the simulated data matrix to be plotted are used.}
+
+\item{var_names}{A character (or numeric) vector of length \code{x$d}. This
+argument can be used to replace variable names set using \code{var_names}
+in the call to \code{\link{ru}} or \code{\link{ru_rcpp}}.}
 
 \item{points_par}{A list of arguments to pass to
 \code{\link[graphics]{points}} to control the appearance of points
 depicting the simulated values. Only relevant when \code{d = 2}.}
 }
+\value{
+No return value, only the plot is produced.
+}
 \description{
-\code{plot} method for class "ru".  For \code{d = 1} a histogram of the
-  simulated values is plotted with a the density function superimposed.
-  The density is normalized crudely using the trapezium rule.  For
-  \code{d = 2} a scatter plot of the simulated values is produced with
-  density contours superimposed.  For \code{d > 2} pairwise plots of the
-  simulated values are produced.
+\code{plot} method for class \code{"ru"}.  For \code{d = 1} a histogram of
+the simulated values is plotted with a the density function superimposed.
+The density is normalized crudely using the trapezium rule.  For
+\code{d = 2} a scatter plot of the simulated values is produced with
+density contours superimposed.  For \code{d > 2} pairwise plots of the
+simulated values are produced.
 }
 \examples{
 # Log-normal density ----------------
 x <- ru(logf = dlnorm, log = TRUE, d = 1, n = 1000, lower = 0, init = 1)
-
 \donttest{
 plot(x)
 }
-
 # Improve appearance using arguments to plot() and hist()
 \donttest{
 plot(x, breaks = seq(0, ceiling(max(x$sim_vals)), by = 0.25),
   xlim = c(0, 10))
 }
-
 # Two-dimensional normal with positive association ----------------
 rho <- 0.9
 covmat <- matrix(c(1, rho, rho, 1), 2, 2)
@@ -84,7 +90,6 @@ log_dmvnorm <- function(x, mean = rep(0, d), sigma = diag(d)) {
   - 0.5 * (x - mean) \%*\% solve(sigma) \%*\% t(x - mean)
 }
 x <- ru(logf = log_dmvnorm, sigma = covmat, d = 2, n = 1000, init = c(0, 0))
-
 \donttest{
 plot(x)
 }

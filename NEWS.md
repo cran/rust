@@ -1,3 +1,27 @@
+# rust 1.4.0
+
+## New features
+
+* `ru()` and `ru_rcpp()` have an additional argument `mode` that allows the user to specify the known mode of the input function `logf` instead of finding it using numerical methods.
+
+## Bug fixes and minor improvements
+
+* An extra example has been added to `ru()`, involving different Box-Cox transformation parameters for different component variables.
+
+* The list object returned from the function `ru()` has an extra component named `trans_fn`.  This is an R function that performs the inverse transformation from the transformed variable $\rho$, on which the generalised ratio-of-uniforms method is performed, back to the original variable $\theta$.
+
+* The documentation of the functions `ru()` and `ru_rcpp()` now note that if the argument `n = 0` is passed then the ratio-of-uniforms bounding box is returned but no simulation is performed. This may be useful if the bounding box itself is of interest.
+
+* In the description of the argument `logf` to `ru()` and `ru_rcpp()` it is advised that `logf = ` should be provided explicitly to avoid the potential for argument matching problems.
+
+* In `plot.ru()` the arguments `xlabs` and `ylabs` have been super-seeded by an argument `var_names`, which can be used to provide variable names for use as axis labels.
+
+* Improvements to the package manual.
+
+* Activated 3rd edition of the `testthat` package
+
+* WARNINGs in the CRAN package check results, like "init.c:60:47: warning: a function declaration without a prototype is deprecated in all versions of C [-Wstrict-prototypes] extern SEXP _revdbayes_RcppExport_registerCCallable();" have been avoided.
+
 # rust 1.3.13
 
 ## Bug fixes and minor improvements
