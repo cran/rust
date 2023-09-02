@@ -12,7 +12,7 @@
 
 <meta name="author" content="Paul Northrop" />
 
-<meta name="date" content="2022-11-15" />
+<meta name="date" content="2023-09-02" />
 
 <title>Rusting Faster: Simulation using Rcpp</title>
 
@@ -31,23 +31,23 @@ document.addEventListener('DOMContentLoaded', function(e) {
 </script>
 
 <style type="text/css">
-code{white-space: pre-wrap;}
-span.smallcaps{font-variant: small-caps;}
-span.underline{text-decoration: underline;}
-div.column{display: inline-block; vertical-align: top; width: 50%;}
-div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
-ul.task-list{list-style: none;}
-</style>
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
 
 
 
 <style type="text/css">
-code {
-white-space: pre;
-}
-.sourceCode {
-overflow: visible;
-}
+  code {
+    white-space: pre;
+  }
+  .sourceCode {
+    overflow: visible;
+  }
 </style>
 <style type="text/css" data-origin="pandoc">
 pre > code.sourceCode { white-space: pre; position: relative; }
@@ -65,54 +65,55 @@ pre > code.sourceCode { white-space: pre-wrap; }
 pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
-{ counter-reset: source-line 0; }
+  { counter-reset: source-line 0; }
 pre.numberSource code > span
-{ position: relative; left: -4em; counter-increment: source-line; }
+  { position: relative; left: -4em; counter-increment: source-line; }
 pre.numberSource code > span > a:first-child::before
-{ content: counter(source-line);
-position: relative; left: -1em; text-align: right; vertical-align: baseline;
-border: none; display: inline-block;
--webkit-touch-callout: none; -webkit-user-select: none;
--khtml-user-select: none; -moz-user-select: none;
--ms-user-select: none; user-select: none;
-padding: 0 4px; width: 4em;
-color: #aaaaaa;
-}
-pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
 div.sourceCode
-{ }
+  {   }
 @media screen {
 pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
-code span.al { color: #ff0000; font-weight: bold; } 
-code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
-code span.at { color: #7d9029; } 
-code span.bn { color: #40a070; } 
-code span.bu { color: #008000; } 
-code span.cf { color: #007020; font-weight: bold; } 
-code span.ch { color: #4070a0; } 
-code span.cn { color: #880000; } 
-code span.co { color: #60a0b0; font-style: italic; } 
-code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
-code span.do { color: #ba2121; font-style: italic; } 
-code span.dt { color: #902000; } 
-code span.dv { color: #40a070; } 
-code span.er { color: #ff0000; font-weight: bold; } 
-code span.ex { } 
-code span.fl { color: #40a070; } 
-code span.fu { color: #06287e; } 
-code span.im { color: #008000; font-weight: bold; } 
-code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
-code span.kw { color: #007020; font-weight: bold; } 
-code span.op { color: #666666; } 
-code span.ot { color: #007020; } 
-code span.pp { color: #bc7a00; } 
-code span.sc { color: #4070a0; } 
-code span.ss { color: #bb6688; } 
-code span.st { color: #4070a0; } 
-code span.va { color: #19177c; } 
-code span.vs { color: #4070a0; } 
-code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+
 </style>
 <script>
 // apply pandoc div.sourceCode style to pre.sourceCode instead
@@ -146,25 +147,25 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; }
 
 
 <style type="text/css">
-
+/* for pandoc --citeproc since 2.11 */
 div.csl-bib-body { }
 div.csl-entry {
-clear: both;
+  clear: both;
 }
 .hanging div.csl-entry {
-margin-left:2em;
-text-indent:-2em;
+  margin-left:2em;
+  text-indent:-2em;
 }
 div.csl-left-margin {
-min-width:2em;
-float:left;
+  min-width:2em;
+  float:left;
 }
 div.csl-right-inline {
-margin-left:2em;
-padding-left:1em;
+  margin-left:2em;
+  padding-left:1em;
 }
 div.csl-indent {
-margin-left: 2em;
+  margin-left: 2em;
 }
 </style>
 
@@ -362,34 +363,33 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 <h1 class="title toc-ignore">Rusting Faster: Simulation using Rcpp</h1>
 <h4 class="author">Paul Northrop</h4>
-<h4 class="date">2022-11-15</h4>
+<h4 class="date">2023-09-02</h4>
 
 
 <div id="TOC">
 <ul>
-<li><a href="#cpp_fun" id="toc-cpp_fun">Providing a C++ function to
+<li><a href="#cpp_fun">Providing a C++ function to
 <code>ru_rcpp</code></a></li>
-<li><a href="#examples-ru_rcpp" id="toc-examples-ru_rcpp">Examples :
-<code>ru_rcpp</code></a>
+<li><a href="#examples-ru_rcpp">Examples : <code>ru_rcpp</code></a>
 <ul>
-<li><a href="#standard-normal-density" id="toc-standard-normal-density">Standard normal density</a></li>
-<li><a href="#mvn" id="toc-mvn">Multivariate normal density</a></li>
-<li><a href="#log-normal-density-after-box-cox-transformation" id="toc-log-normal-density-after-box-cox-transformation">Log-normal
+<li><a href="#standard-normal-density">Standard normal density</a></li>
+<li><a href="#mvn">Multivariate normal density</a></li>
+<li><a href="#log-normal-density-after-box-cox-transformation">Log-normal
 density after Box-Cox transformation</a></li>
-<li><a href="#generalized-pareto-posterior-density" id="toc-generalized-pareto-posterior-density">Generalized Pareto
+<li><a href="#generalized-pareto-posterior-density">Generalized Pareto
 posterior density</a></li>
 </ul></li>
-<li><a href="#examples-find_lambda_one_d_rcpp-and-find_lambda_rcpp" id="toc-examples-find_lambda_one_d_rcpp-and-find_lambda_rcpp">Examples :
+<li><a href="#examples-find_lambda_one_d_rcpp-and-find_lambda_rcpp">Examples :
 <code>find_lambda_one_d_rcpp</code> and
 <code>find_lambda_rcpp</code></a>
 <ul>
-<li><a href="#gamma-density-example-for-find_lambda_one_d_rcpp" id="toc-gamma-density-example-for-find_lambda_one_d_rcpp">Gamma density:
-example for <code>find_lambda_one_d_rcpp</code></a></li>
-<li><a href="#generalized-pareto-posterior-density-example-for-find_lambda_rcpp" id="toc-generalized-pareto-posterior-density-example-for-find_lambda_rcpp">Generalized
+<li><a href="#gamma-density-example-for-find_lambda_one_d_rcpp">Gamma
+density: example for <code>find_lambda_one_d_rcpp</code></a></li>
+<li><a href="#generalized-pareto-posterior-density-example-for-find_lambda_rcpp">Generalized
 Pareto posterior density: example for
 <code>find_lambda_rcpp</code></a></li>
 </ul></li>
-<li><a href="#references" id="toc-references">References</a></li>
+<li><a href="#references">References</a></li>
 </ul>
 </div>
 
@@ -525,13 +525,14 @@ to compare the performances of <code>ru</code> and <code>ru_rcpp</code>.
 We use the <strong>microbenchmark</strong> package <span class="citation">(Mersmann 2015)</span> to make the comparison.</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rust)</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(Rcpp)</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Is microbenchmark available?</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>got_microbenchmark <span class="ot">&lt;-</span> <span class="fu">requireNamespace</span>(<span class="st">&quot;microbenchmark&quot;</span>, <span class="at">quietly =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (got_microbenchmark) {</span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(microbenchmark)</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>}  </span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Set the size of the simulated sample</span></span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>n <span class="ot">&lt;-</span> <span class="dv">1000</span></span></code></pre></div>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Warning: package &#39;Rcpp&#39; was built under R version 4.2.3</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Is microbenchmark available?</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>got_microbenchmark <span class="ot">&lt;-</span> <span class="fu">requireNamespace</span>(<span class="st">&quot;microbenchmark&quot;</span>, <span class="at">quietly =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (got_microbenchmark) {</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(microbenchmark)</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>}  </span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Set the size of the simulated sample</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>n <span class="ot">&lt;-</span> <span class="dv">1000</span></span></code></pre></div>
 <p>It is assumed that the user has already compiled their C++ functions
 and made them available to their R session, either using the
 <code>Rcpp::sourceCpp</code> function
@@ -581,8 +582,8 @@ density, based on the C++ function <code>logdN01</code> in the example
 <span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>}</span>
 <span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Unit: milliseconds</span></span>
 <span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  expr    min     lq   mean median     uq    max neval</span></span>
-<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   old 19.750 20.850 22.090 21.460 22.720 27.510   100</span></span>
-<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   new  2.261  2.421  2.792  2.553  2.681  6.879   100</span></span></code></pre></div>
+<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   old 21.910 23.110 25.100 24.220 26.920 34.300   100</span></span>
+<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   new  2.376  2.575  3.075  2.718  2.897  6.548   100</span></span></code></pre></div>
 <p>As we would hope, <code>ru_rcpp</code> is faster than
 <code>ru</code>. If we start from the same random number seed we get the
 same simulated values from <code>ru</code> and <code>ru_rcpp</code>.</p>
@@ -627,9 +628,9 @@ double logdmvnorm(const Rcpp::NumericVector&amp; x, const Rcpp::List&amp; pars) 
 <span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(res, <span class="at">signif =</span> <span class="dv">4</span>)</span>
 <span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>}  </span>
 <span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Unit: milliseconds</span></span>
-<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  expr     min      lq  mean median     uq    max neval</span></span>
-<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   old 212.800 225.400 231.3 229.80 233.80 306.10   100</span></span>
-<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   new   9.621   9.912  10.5  10.19  10.74  14.86   100</span></span></code></pre></div>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  expr     min     lq   mean median     uq    max neval</span></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   old 239.500 255.60 265.20 261.40 267.80 355.10   100</span></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   new   9.956  10.41  11.52  10.71  11.97  16.31   100</span></span></code></pre></div>
 <p>Again, the improvement in speed obtained using Rcpp is clear.</p>
 </div>
 <div id="log-normal-density-after-box-cox-transformation" class="section level3">
@@ -660,9 +661,9 @@ double logdlnorm(const Rcpp::NumericVector&amp; x, const Rcpp::List&amp; pars) {
 <span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(res, <span class="at">signif =</span> <span class="dv">4</span>)</span>
 <span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>}  </span>
 <span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Unit: milliseconds</span></span>
-<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  expr    min    lq   mean median     uq   max neval</span></span>
-<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   old 41.450 43.85 47.580 46.620 49.760 77.38   100</span></span>
-<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   new  5.189  5.50  6.144  5.708  6.008 10.73   100</span></span></code></pre></div>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  expr    min     lq  mean median    uq   max neval</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   old 44.300 47.520 49.97 49.440 50.86 113.4   100</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   new  5.531  5.881  7.21  6.138  9.27  14.7   100</span></span></code></pre></div>
 </div>
 <div id="generalized-pareto-posterior-density" class="section level3">
 <h3>Generalized Pareto posterior density</h3>
@@ -728,9 +729,9 @@ initial value in the search for the posterior mode.</p>
 <span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(res, <span class="at">signif =</span> <span class="dv">4</span>)</span>
 <span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>}  </span>
 <span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Unit: milliseconds</span></span>
-<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  expr   min    lq  mean median    uq    max neval</span></span>
-<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   old 82.89 91.41 94.55  93.46 97.00 165.20   100</span></span>
-<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   new 17.96 18.86 20.32  19.37 20.51  29.91   100</span></span></code></pre></div>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  expr   min     lq   mean median    uq    max neval</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   old 94.75 100.40 104.50 102.90 106.3 175.10   100</span></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   new 18.64  19.28  20.55  19.63  20.6  27.99   100</span></span></code></pre></div>
 </div>
 </div>
 <div id="examples-find_lambda_one_d_rcpp-and-find_lambda_rcpp" class="section level2">
@@ -805,10 +806,10 @@ of the transformation.</p>
 <span id="cb15-24"><a href="#cb15-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 0.12670792 0.02477219 </span></span>
 <span id="cb15-25"><a href="#cb15-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb15-26"><a href="#cb15-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $phi_to_theta</span></span>
-<span id="cb15-27"><a href="#cb15-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; &lt;pointer: 0x000000fa60258060&gt;</span></span>
+<span id="cb15-27"><a href="#cb15-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; &lt;pointer: 0x00000129f827bf20&gt;</span></span>
 <span id="cb15-28"><a href="#cb15-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb15-29"><a href="#cb15-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $log_j</span></span>
-<span id="cb15-30"><a href="#cb15-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; &lt;pointer: 0x000000fa60257f80&gt;</span></span>
+<span id="cb15-30"><a href="#cb15-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; &lt;pointer: 0x00000129f827be40&gt;</span></span>
 <span id="cb15-31"><a href="#cb15-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb15-32"><a href="#cb15-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $user_args</span></span>
 <span id="cb15-33"><a href="#cb15-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $user_args$xm</span></span>
