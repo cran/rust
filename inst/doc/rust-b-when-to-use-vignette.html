@@ -12,7 +12,7 @@
 
 <meta name="author" content="Paul Northrop" />
 
-<meta name="date" content="2023-09-02" />
+<meta name="date" content="2023-12-02" />
 
 <title>When can rust be used?</title>
 
@@ -31,23 +31,23 @@ document.addEventListener('DOMContentLoaded', function(e) {
 </script>
 
 <style type="text/css">
-  code{white-space: pre-wrap;}
-  span.smallcaps{font-variant: small-caps;}
-  span.underline{text-decoration: underline;}
-  div.column{display: inline-block; vertical-align: top; width: 50%;}
-  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
-  ul.task-list{list-style: none;}
-    </style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
 
 
 
 <style type="text/css">
-  code {
-    white-space: pre;
-  }
-  .sourceCode {
-    overflow: visible;
-  }
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
 </style>
 <style type="text/css" data-origin="pandoc">
 pre > code.sourceCode { white-space: pre; position: relative; }
@@ -65,55 +65,54 @@ pre > code.sourceCode { white-space: pre-wrap; }
 pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
-  { counter-reset: source-line 0; }
+{ counter-reset: source-line 0; }
 pre.numberSource code > span
-  { position: relative; left: -4em; counter-increment: source-line; }
+{ position: relative; left: -4em; counter-increment: source-line; }
 pre.numberSource code > span > a:first-child::before
-  { content: counter(source-line);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; display: inline-block;
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    -khtml-user-select: none; -moz-user-select: none;
-    -ms-user-select: none; user-select: none;
-    padding: 0 4px; width: 4em;
-    color: #aaaaaa;
-  }
-pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
 div.sourceCode
-  {   }
+{ }
 @media screen {
 pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
-code span.al { color: #ff0000; font-weight: bold; } /* Alert */
-code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
-code span.at { color: #7d9029; } /* Attribute */
-code span.bn { color: #40a070; } /* BaseN */
-code span.bu { } /* BuiltIn */
-code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
-code span.ch { color: #4070a0; } /* Char */
-code span.cn { color: #880000; } /* Constant */
-code span.co { color: #60a0b0; font-style: italic; } /* Comment */
-code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
-code span.do { color: #ba2121; font-style: italic; } /* Documentation */
-code span.dt { color: #902000; } /* DataType */
-code span.dv { color: #40a070; } /* DecVal */
-code span.er { color: #ff0000; font-weight: bold; } /* Error */
-code span.ex { } /* Extension */
-code span.fl { color: #40a070; } /* Float */
-code span.fu { color: #06287e; } /* Function */
-code span.im { } /* Import */
-code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
-code span.kw { color: #007020; font-weight: bold; } /* Keyword */
-code span.op { color: #666666; } /* Operator */
-code span.ot { color: #007020; } /* Other */
-code span.pp { color: #bc7a00; } /* Preprocessor */
-code span.sc { color: #4070a0; } /* SpecialChar */
-code span.ss { color: #bb6688; } /* SpecialString */
-code span.st { color: #4070a0; } /* String */
-code span.va { color: #19177c; } /* Variable */
-code span.vs { color: #4070a0; } /* VerbatimString */
-code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
-
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
 </style>
 <script>
 // apply pandoc div.sourceCode style to pre.sourceCode instead
@@ -147,25 +146,25 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 
 <style type="text/css">
-/* for pandoc --citeproc since 2.11 */
+
 div.csl-bib-body { }
 div.csl-entry {
-  clear: both;
+clear: both;
 }
 .hanging div.csl-entry {
-  margin-left:2em;
-  text-indent:-2em;
+margin-left:2em;
+text-indent:-2em;
 }
 div.csl-left-margin {
-  min-width:2em;
-  float:left;
+min-width:2em;
+float:left;
 }
 div.csl-right-inline {
-  margin-left:2em;
-  padding-left:1em;
+margin-left:2em;
+padding-left:1em;
 }
 div.csl-indent {
-  margin-left: 2em;
+margin-left: 2em;
 }
 </style>
 
@@ -363,21 +362,23 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 <h1 class="title toc-ignore">When can rust be used?</h1>
 <h4 class="author">Paul Northrop</h4>
-<h4 class="date">2023-09-02</h4>
+<h4 class="date">2023-12-02</h4>
 
 
 <div id="TOC">
 <ul>
-<li><a href="#conditions-on-f">Conditions on <span class="math inline">\(f\)</span></a></li>
-<li><a href="#unbounded-densities">Unbounded densities</a></li>
-<li><a href="#heavy-tailed-densities">Heavy-tailed densities</a>
+<li><a href="#conditions-on-f" id="toc-conditions-on-f">Conditions on
+<span class="math inline">\(f\)</span></a></li>
+<li><a href="#unbounded-densities" id="toc-unbounded-densities">Unbounded densities</a></li>
+<li><a href="#heavy-tailed-densities" id="toc-heavy-tailed-densities">Heavy-tailed densities</a>
 <ul>
-<li><a href="#cauchy-density">Cauchy density</a></li>
-<li><a href="#hierarchical-1-way-anova-with-few-groups">Hierarchical
-1-way ANOVA with few groups</a></li>
+<li><a href="#cauchy-density" id="toc-cauchy-density">Cauchy
+density</a></li>
+<li><a href="#hierarchical-1-way-anova-with-few-groups" id="toc-hierarchical-1-way-anova-with-few-groups">Hierarchical 1-way
+ANOVA with few groups</a></li>
 </ul></li>
-<li><a href="#multimodal-densities">Multimodal densities</a></li>
-<li><a href="#references">References</a></li>
+<li><a href="#multimodal-densities" id="toc-multimodal-densities">Multimodal densities</a></li>
+<li><a href="#references" id="toc-references">References</a></li>
 </ul>
 </div>
 
@@ -438,18 +439,18 @@ user needs to specify a range of values (<code>min_phi</code>,
 <code>max_phi</code>) over which to perform the calculations). In the
 gamma(0.1, 1) case below a value of <span class="math inline">\(\lambda\)</span> that is close to 0 is suggested.
 The plot on the right shows that this does the trick.</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rust)</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>alpha <span class="ot">&lt;-</span> <span class="fl">0.1</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>max_phi <span class="ot">&lt;-</span> <span class="fu">qgamma</span>(<span class="fl">0.999</span>, <span class="at">shape =</span> alpha)</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>ptr_gam <span class="ot">&lt;-</span> <span class="fu">create_xptr</span>(<span class="st">&quot;logdgamma&quot;</span>)</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>lambda <span class="ot">&lt;-</span> <span class="fu">find_lambda_one_d_rcpp</span>(<span class="at">logf =</span> ptr_gam, <span class="at">alpha =</span> alpha,</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>                                 <span class="at">max_phi =</span> max_phi)</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Box-Cox transformation parameter</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>lambda<span class="sc">$</span>lambda</span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>gam <span class="ot">&lt;-</span> <span class="fu">ru_rcpp</span>(<span class="at">logf =</span> ptr_gam, <span class="at">alpha =</span> alpha, <span class="at">d =</span> <span class="dv">1</span>, <span class="at">n =</span> <span class="dv">1000</span>, <span class="at">trans =</span> <span class="st">&quot;BC&quot;</span>,</span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>               <span class="at">lambda =</span> lambda)</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(gam, <span class="at">xlab =</span> <span class="st">&quot;x&quot;</span>)</span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(gam, <span class="at">ru_scale =</span> <span class="cn">TRUE</span>, <span class="at">xlab =</span> <span class="st">&quot;y&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(rust)</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>alpha <span class="ot">&lt;-</span> <span class="fl">0.1</span></span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>max_phi <span class="ot">&lt;-</span> <span class="fu">qgamma</span>(<span class="fl">0.999</span>, <span class="at">shape =</span> alpha)</span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a>ptr_gam <span class="ot">&lt;-</span> <span class="fu">create_xptr</span>(<span class="st">&quot;logdgamma&quot;</span>)</span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a>lambda <span class="ot">&lt;-</span> <span class="fu">find_lambda_one_d_rcpp</span>(<span class="at">logf =</span> ptr_gam, <span class="at">alpha =</span> alpha,</span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a>                                 <span class="at">max_phi =</span> max_phi)</span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a><span class="co"># Box-Cox transformation parameter</span></span>
+<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a>lambda<span class="sc">$</span>lambda</span>
+<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a>gam <span class="ot">&lt;-</span> <span class="fu">ru_rcpp</span>(<span class="at">logf =</span> ptr_gam, <span class="at">alpha =</span> alpha, <span class="at">d =</span> <span class="dv">1</span>, <span class="at">n =</span> <span class="dv">1000</span>, <span class="at">trans =</span> <span class="st">&quot;BC&quot;</span>,</span>
+<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a>               <span class="at">lambda =</span> lambda)</span>
+<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a><span class="fu">plot</span>(gam, <span class="at">xlab =</span> <span class="st">&quot;x&quot;</span>)</span>
+<span id="cb1-12"><a href="#cb1-12" tabindex="-1"></a><span class="fu">plot</span>(gam, <span class="at">ru_scale =</span> <span class="cn">TRUE</span>, <span class="at">xlab =</span> <span class="st">&quot;y&quot;</span>)</span></code></pre></div>
 <p>Here we have used <code>find_lambda_one_d_rcpp</code> and
 <code>ru_rcpp</code> (see the vignette <a href="rust-c-using-rcpp-vignette.html">Rusting faster: Speedy Simulation
 using Rcpp</a>) but we could equally have used <code>ru</code> and
@@ -473,11 +474,11 @@ as <span class="math inline">\(x\)</span> decreases/increases to
 infinity respectively. This is fine in theory but using <span class="math inline">\(r &gt; 1\)</span> avoids this problem and the
 largest probability of acceptance is obtained for <span class="math inline">\(r \approx 1.26\)</span>. Below are the estimated
 bounding boxes and probabilities of acceptance for <span class="math inline">\(r = 1\)</span> (left) and <span class="math inline">\(r = 1.26\)</span> (right).</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>ptr_c <span class="ot">&lt;-</span> <span class="fu">create_xptr</span>(<span class="st">&quot;logcauchy&quot;</span>)</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>cauchy1 <span class="ot">&lt;-</span> <span class="fu">ru_rcpp</span>(<span class="at">logf =</span> ptr_c, <span class="at">log =</span> <span class="cn">TRUE</span>, <span class="at">init =</span> <span class="dv">0</span>, <span class="at">r =</span> <span class="dv">1</span>, <span class="at">n =</span> <span class="dv">1000</span>)</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>cauchy126 <span class="ot">&lt;-</span> <span class="fu">ru_rcpp</span>(<span class="at">logf =</span> ptr_c, <span class="at">log =</span> <span class="cn">TRUE</span>, <span class="at">init =</span> <span class="dv">0</span>, <span class="at">r =</span> <span class="fl">1.26</span>, <span class="at">n =</span> <span class="dv">1000</span>)</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="fu">cbind</span>(cauchy1<span class="sc">$</span>box, cauchy126<span class="sc">$</span>box)</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(cauchy1<span class="sc">$</span>pa, cauchy126<span class="sc">$</span>pa)</span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>ptr_c <span class="ot">&lt;-</span> <span class="fu">create_xptr</span>(<span class="st">&quot;logcauchy&quot;</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>cauchy1 <span class="ot">&lt;-</span> <span class="fu">ru_rcpp</span>(<span class="at">logf =</span> ptr_c, <span class="at">log =</span> <span class="cn">TRUE</span>, <span class="at">init =</span> <span class="dv">0</span>, <span class="at">r =</span> <span class="dv">1</span>, <span class="at">n =</span> <span class="dv">1000</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>cauchy126 <span class="ot">&lt;-</span> <span class="fu">ru_rcpp</span>(<span class="at">logf =</span> ptr_c, <span class="at">log =</span> <span class="cn">TRUE</span>, <span class="at">init =</span> <span class="dv">0</span>, <span class="at">r =</span> <span class="fl">1.26</span>, <span class="at">n =</span> <span class="dv">1000</span>)</span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a><span class="fu">cbind</span>(cauchy1<span class="sc">$</span>box, cauchy126<span class="sc">$</span>box)</span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a><span class="fu">c</span>(cauchy1<span class="sc">$</span>pa, cauchy126<span class="sc">$</span>pa)</span></code></pre></div>
 <p>For <span class="math inline">\(r = 1\)</span> the algorithm finds
 essentially the correct values of <span class="math inline">\(b_1^-\)</span> and <span class="math inline">\(b_1^+\)</span> even though these do not occur at a
 turning point of the objective functions. The estimated probability of
@@ -531,22 +532,22 @@ this. However, if we use <span class="math inline">\(r = 1\)</span> then
 the bounding box can be found. The two successful approaches
 (reparameterization or use of <span class="math inline">\(r=1\)</span>)
 are illustrated below.</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(bang)</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>coag1 <span class="ot">&lt;-</span> <span class="fu">hanova1</span>(<span class="at">resp =</span> coagulation[, <span class="dv">1</span>], <span class="at">fac =</span> coagulation[, <span class="dv">2</span>], <span class="at">n =</span> <span class="dv">1000</span>)</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>coag2 <span class="ot">&lt;-</span> <span class="fu">hanova1</span>(<span class="at">resp =</span> coagulation[, <span class="dv">1</span>], <span class="at">fac =</span> coagulation[, <span class="dv">2</span>], <span class="at">n =</span> <span class="dv">1000</span>,</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>                 <span class="at">param =</span> <span class="st">&quot;original&quot;</span>, <span class="at">r =</span> <span class="dv">1</span>)</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>probs <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">2.5</span>, <span class="dv">25</span>, <span class="dv">50</span>, <span class="dv">75</span>, <span class="fl">97.5</span>) <span class="sc">/</span> <span class="dv">100</span></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>all1 <span class="ot">&lt;-</span> <span class="fu">cbind</span>(coag1<span class="sc">$</span>theta_sim_vals, coag1<span class="sc">$</span>sim_vals)</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>all2 <span class="ot">&lt;-</span> <span class="fu">cbind</span>(coag2<span class="sc">$</span>theta_sim_vals, coag2<span class="sc">$</span>sim_vals)</span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">t</span>(<span class="fu">apply</span>(all1, <span class="dv">2</span>, quantile, <span class="at">probs =</span> probs)), <span class="dv">1</span>)</span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">t</span>(<span class="fu">apply</span>(all2, <span class="dv">2</span>, quantile, <span class="at">probs =</span> probs)), <span class="dv">1</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">library</span>(bang)</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>coag1 <span class="ot">&lt;-</span> <span class="fu">hanova1</span>(<span class="at">resp =</span> coagulation[, <span class="dv">1</span>], <span class="at">fac =</span> coagulation[, <span class="dv">2</span>], <span class="at">n =</span> <span class="dv">1000</span>)</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>coag2 <span class="ot">&lt;-</span> <span class="fu">hanova1</span>(<span class="at">resp =</span> coagulation[, <span class="dv">1</span>], <span class="at">fac =</span> coagulation[, <span class="dv">2</span>], <span class="at">n =</span> <span class="dv">1000</span>,</span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>                 <span class="at">param =</span> <span class="st">&quot;original&quot;</span>, <span class="at">r =</span> <span class="dv">1</span>)</span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>probs <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">2.5</span>, <span class="dv">25</span>, <span class="dv">50</span>, <span class="dv">75</span>, <span class="fl">97.5</span>) <span class="sc">/</span> <span class="dv">100</span></span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>all1 <span class="ot">&lt;-</span> <span class="fu">cbind</span>(coag1<span class="sc">$</span>theta_sim_vals, coag1<span class="sc">$</span>sim_vals)</span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>all2 <span class="ot">&lt;-</span> <span class="fu">cbind</span>(coag2<span class="sc">$</span>theta_sim_vals, coag2<span class="sc">$</span>sim_vals)</span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">t</span>(<span class="fu">apply</span>(all1, <span class="dv">2</span>, quantile, <span class="at">probs =</span> probs)), <span class="dv">1</span>)</span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">t</span>(<span class="fu">apply</span>(all2, <span class="dv">2</span>, quantile, <span class="at">probs =</span> probs)), <span class="dv">1</span>)</span></code></pre></div>
 <p>These posterior summaries are similar to those presented in Table
 11.3 of <span class="citation">Gelman et al. (2014)</span> (where <span class="math inline">\(\sigma_\alpha\)</span> is denoted <span class="math inline">\(\tau\)</span>), which were obtained using Gibbs
 sampling.</p>
 <p>The reparameterization strategy has the higher estimated probability
 of acceptance.</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>coag1<span class="sc">$</span>pa</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>coag2<span class="sc">$</span>pa</span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>coag1<span class="sc">$</span>pa</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>coag2<span class="sc">$</span>pa</span></code></pre></div>
 </div>
 </div>
 <div id="multimodal-densities" class="section level2">
@@ -562,19 +563,19 @@ search for bounding box parameters in a way that is designed to work
 well when the density is unimodal. The following examples demonstrate
 that currently <code>ru</code> isn’t guaranteed to find a suitable
 bounding box for multimodal densities.</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>normal_mixture <span class="ot">&lt;-</span> <span class="cf">function</span>(x, mu, p) {</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(<span class="fu">log</span>(p <span class="sc">*</span> <span class="fu">dnorm</span>(x) <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">-</span> p) <span class="sc">*</span> <span class="fu">dnorm</span>(x, <span class="at">mean =</span> mu)))</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>res1 <span class="ot">&lt;-</span> <span class="fu">ru</span>(<span class="at">logf =</span> normal_mixture, <span class="at">mu =</span> <span class="dv">10</span>, <span class="at">p =</span> <span class="fl">0.25</span>, <span class="at">init =</span> <span class="sc">-</span><span class="dv">1</span>, <span class="at">n =</span> <span class="dv">1000</span>)</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(res1, <span class="at">main =</span> <span class="st">&quot;(a)&quot;</span>)</span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>res2 <span class="ot">&lt;-</span> <span class="fu">ru</span>(<span class="at">logf =</span> normal_mixture, <span class="at">mu =</span> <span class="dv">10</span>, <span class="at">p =</span> <span class="fl">0.25</span>, <span class="at">init =</span> <span class="dv">11</span>, <span class="at">n =</span> <span class="dv">1000</span>)</span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(res2, <span class="at">main =</span> <span class="st">&quot;(b)&quot;</span>)</span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>res3 <span class="ot">&lt;-</span> <span class="fu">ru</span>(<span class="at">logf =</span> normal_mixture, <span class="at">mu =</span> <span class="dv">4</span>, <span class="at">p =</span> <span class="fl">0.25</span>, <span class="at">init =</span> <span class="dv">5</span>, <span class="at">n =</span> <span class="dv">1000</span>)</span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(res3, <span class="at">main =</span> <span class="st">&quot;(c)&quot;</span>)</span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>res3<span class="sc">$</span>pa</span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>res4 <span class="ot">&lt;-</span> <span class="fu">ru</span>(<span class="at">logf =</span> normal_mixture, <span class="at">mu =</span> <span class="dv">4</span>, <span class="at">p =</span> <span class="fl">0.25</span>, <span class="at">init =</span> <span class="sc">-</span><span class="dv">1</span>, <span class="at">n =</span> <span class="dv">1000</span>)</span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(res4, <span class="at">main =</span> <span class="st">&quot;(d)&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>normal_mixture <span class="ot">&lt;-</span> <span class="cf">function</span>(x, mu, p) {</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>  <span class="fu">return</span>(<span class="fu">log</span>(p <span class="sc">*</span> <span class="fu">dnorm</span>(x) <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">-</span> p) <span class="sc">*</span> <span class="fu">dnorm</span>(x, <span class="at">mean =</span> mu)))</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>}</span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>res1 <span class="ot">&lt;-</span> <span class="fu">ru</span>(<span class="at">logf =</span> normal_mixture, <span class="at">mu =</span> <span class="dv">10</span>, <span class="at">p =</span> <span class="fl">0.25</span>, <span class="at">init =</span> <span class="sc">-</span><span class="dv">1</span>, <span class="at">n =</span> <span class="dv">1000</span>)</span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="fu">plot</span>(res1, <span class="at">main =</span> <span class="st">&quot;(a)&quot;</span>)</span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>res2 <span class="ot">&lt;-</span> <span class="fu">ru</span>(<span class="at">logf =</span> normal_mixture, <span class="at">mu =</span> <span class="dv">10</span>, <span class="at">p =</span> <span class="fl">0.25</span>, <span class="at">init =</span> <span class="dv">11</span>, <span class="at">n =</span> <span class="dv">1000</span>)</span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a><span class="fu">plot</span>(res2, <span class="at">main =</span> <span class="st">&quot;(b)&quot;</span>)</span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a>res3 <span class="ot">&lt;-</span> <span class="fu">ru</span>(<span class="at">logf =</span> normal_mixture, <span class="at">mu =</span> <span class="dv">4</span>, <span class="at">p =</span> <span class="fl">0.25</span>, <span class="at">init =</span> <span class="dv">5</span>, <span class="at">n =</span> <span class="dv">1000</span>)</span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a><span class="fu">plot</span>(res3, <span class="at">main =</span> <span class="st">&quot;(c)&quot;</span>)</span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a>res3<span class="sc">$</span>pa</span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a>res4 <span class="ot">&lt;-</span> <span class="fu">ru</span>(<span class="at">logf =</span> normal_mixture, <span class="at">mu =</span> <span class="dv">4</span>, <span class="at">p =</span> <span class="fl">0.25</span>, <span class="at">init =</span> <span class="sc">-</span><span class="dv">1</span>, <span class="at">n =</span> <span class="dv">1000</span>)</span>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a><span class="fu">plot</span>(res4, <span class="at">main =</span> <span class="st">&quot;(d)&quot;</span>)</span></code></pre></div>
 <p>In (a), using the initial value <code>init = -1</code> means that the
 smaller of the two modes is found in the search for <span class="math inline">\(a(r)\)</span>. As a consequence most of the
 acceptance region for the other component of the mixture is not

@@ -1,4 +1,4 @@
-## ---- include = FALSE---------------------------------------------------------
+## ----include = FALSE----------------------------------------------------------
 knitr::opts_chunk$set(comment = "#>", collapse = TRUE)
 
 required <- c("bang")
@@ -6,7 +6,7 @@ required <- c("bang")
 if (!all(unlist(lapply(required, function(pkg) requireNamespace(pkg, quietly = TRUE)))))
   knitr::opts_chunk$set(eval = FALSE)
 
-## ---- fig.show='hold'---------------------------------------------------------
+## ----fig.show='hold'----------------------------------------------------------
 #  library(rust)
 #  alpha <- 0.1
 #  max_phi <- qgamma(0.999, shape = alpha)
@@ -27,7 +27,7 @@ if (!all(unlist(lapply(required, function(pkg) requireNamespace(pkg, quietly = T
 #  cbind(cauchy1$box, cauchy126$box)
 #  c(cauchy1$pa, cauchy126$pa)
 
-## ---- fig.show='hold'---------------------------------------------------------
+## ----fig.show='hold'----------------------------------------------------------
 #  library(bang)
 #  coag1 <- hanova1(resp = coagulation[, 1], fac = coagulation[, 2], n = 1000)
 #  coag2 <- hanova1(resp = coagulation[, 1], fac = coagulation[, 2], n = 1000,
@@ -42,7 +42,7 @@ if (!all(unlist(lapply(required, function(pkg) requireNamespace(pkg, quietly = T
 #  coag1$pa
 #  coag2$pa
 
-## ---- fig.show='hold'---------------------------------------------------------
+## ----fig.show='hold'----------------------------------------------------------
 #  normal_mixture <- function(x, mu, p) {
 #    return(log(p * dnorm(x) + (1 - p) * dnorm(x, mean = mu)))
 #  }

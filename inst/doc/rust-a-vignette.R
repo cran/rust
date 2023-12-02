@@ -1,4 +1,4 @@
-## ---- include = FALSE---------------------------------------------------------
+## ----include = FALSE----------------------------------------------------------
 knitr::opts_chunk$set(comment = "#>", collapse = TRUE)
 
 required <- c("revdbayes")
@@ -6,7 +6,7 @@ required <- c("revdbayes")
 if (!all(unlist(lapply(required, function(pkg) requireNamespace(pkg, quietly = TRUE)))))
   knitr::opts_chunk$set(eval = FALSE)
 
-## ---- echo=FALSE, results='asis'----------------------------------------------
+## ----echo=FALSE, results='asis'-----------------------------------------------
 d <- 1:6
 pa <- (pi * exp(1)) ^ (d /2) / (2 ^ d * (1 + d / 2) ^ (1 + d /2))
 pa <- matrix(pa, ncol = length(d), nrow = 1)
@@ -67,7 +67,7 @@ x3 <- ru(logf = gpd_logpost, ss = ss, d = 2, n = n, trans = "BC",
 x4 <- ru(logf = gpd_logpost, ss = ss, d = 2, n = n, trans = "BC",
   lambda = lambda, var_names = c("sigma", "xi"))
 
-## ---- fig.show='hold', out.width="45%"----------------------------------------
+## ----fig.show='hold', out.width="45%"-----------------------------------------
 plot(x1, ru_scale = TRUE, cex.main = 0.75, cex.lab = 0.75, 
   main = paste("mode relocation \n pa = ", round(x1$pa, 3)))
 plot(x2, ru_scale = TRUE, cex.main = 0.75, cex.lab = 0.75, 
@@ -77,7 +77,7 @@ plot(x3, ru_scale = TRUE, cex.main = 0.75, cex.lab = 0.75,
 plot(x4, ru_scale = TRUE, cex.main = 0.75, cex.lab = 0.75,
   main = paste("Box-Cox, mode relocation and rotation \n pa = ", round(x4$pa, 3)))
 
-## ---- fig.align='center'------------------------------------------------------
+## ----fig.align='center'-------------------------------------------------------
 plot(x4, xlab = "sigma", ylab = "xi")
 
 ## -----------------------------------------------------------------------------
@@ -102,7 +102,7 @@ x3 <- ru(logf = dlnorm, log = TRUE, d = 1, n = n, init = 0.1, trans = "user",
         phi_to_theta = function(x) exp(x), log_j = function(x) -log(x))
 x3$pa
 
-## ---- fig.show='hold', out.width="45%"----------------------------------------
+## ----fig.show='hold', out.width="45%"-----------------------------------------
 plot(x3, ru_scale = TRUE, xlab = "z")
 plot(x1, xlab = "x")
 
@@ -156,7 +156,7 @@ x4 <- ru(logf = dgamma, shape = alpha, log = TRUE, d = 1, n = n, trans = "BC",
   lambda = lambda)
 x4$pa
 
-## ---- fig.show='hold', out.width="45%"----------------------------------------
+## ----fig.show='hold', out.width="45%"-----------------------------------------
 plot(x4)
 plot(x4, ru_scale = TRUE)
 
@@ -176,7 +176,7 @@ x1 <- ru(logf = log_dmvnorm, sigma = covmat, d = 2, n = n, init = c(0, 0),
 x2 <- ru(logf = log_dmvnorm, sigma = covmat, d = 2, n = n, init = c(0, 0))
 c(x1$pa, x2$pa)
 
-## ---- fig.show='hold', out.width="45%"----------------------------------------
+## ----fig.show='hold', out.width="45%"-----------------------------------------
 plot(x1, ru_scale = TRUE)
 plot(x2, ru_scale = TRUE)
 
@@ -191,7 +191,7 @@ x4 <- ru(logf = log_dmvnorm, sigma = covmat, d = 3, n = n,
   init = c(0, 0, 0))
 c(x3$pa, x4$pa)
 
-## ---- fig.width = 7-----------------------------------------------------------
+## ----fig.width = 7------------------------------------------------------------
 plot(x3, ru_scale = TRUE)
 plot(x4, ru_scale = TRUE)
 
