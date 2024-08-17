@@ -1,10 +1,6 @@
 ## ----include = FALSE----------------------------------------------------------
 knitr::opts_chunk$set(comment = "#>", collapse = TRUE)
-
-required <- c("revdbayes")
-
-if (!all(unlist(lapply(required, function(pkg) requireNamespace(pkg, quietly = TRUE)))))
-  knitr::opts_chunk$set(eval = FALSE)
+got_revdbayes <- requireNamespace("revdbayes", quietly = TRUE)
 
 ## ----echo=FALSE, results='asis'-----------------------------------------------
 d <- 1:6
@@ -15,6 +11,8 @@ knitr::kable(round(pa,3), caption = "$p_a(d, 1/2)$ as $d$ varies.")
 
 ## -----------------------------------------------------------------------------
 library(rust)
+
+## ----eval = got_revdbayes-----------------------------------------------------
 set.seed(46)
 # Sample data from a GP(sigma, xi) distribution
 gpd_data <- rgpd(m = 100, xi = -0.5, sigma = 1)
@@ -23,7 +21,7 @@ ss <- gpd_sum_stats(gpd_data)
 # Calculate an initial estimate
 init <- c(mean(gpd_data), 0)
 
-## -----------------------------------------------------------------------------
+## ----eval = got_revdbayes-----------------------------------------------------
 n <- 10000
 # Mode relocation only ----------------
 x1 <- ru(logf = gpd_logpost, ss = ss, d = 2, n = n, init = init,
@@ -33,7 +31,7 @@ x1 <- ru(logf = gpd_logpost, ss = ss, d = 2, n = n, init = init,
 x2 <- ru(logf = gpd_logpost, ss = ss, d = 2, n = n, init = init,
   lower = c(0, -Inf))
 
-## -----------------------------------------------------------------------------
+## ----eval = got_revdbayes-----------------------------------------------------
 # Find initial estimates for phi = (phi1, phi2),
 # where phi1 = sigma
 #   and phi2 = xi + sigma / max(x),
@@ -53,12 +51,12 @@ max_phi <- pmax(0, temp$init_phi + 2 * temp$se_phi)
 phi_to_theta <- function(phi) c(phi[1], phi[2] - phi[1] / ss$xm)
 log_j <- function(x) 0
 
-## -----------------------------------------------------------------------------
+## ----eval = got_revdbayes-----------------------------------------------------
 lambda <- find_lambda(logf = gpd_logpost, ss = ss, d = 2, min_phi = min_phi,
   max_phi = max_phi, phi_to_theta = phi_to_theta, log_j = log_j)
 lambda
 
-## -----------------------------------------------------------------------------
+## ----eval = got_revdbayes-----------------------------------------------------
 # Sample on Box-Cox transformed, without rotation
 x3 <- ru(logf = gpd_logpost, ss = ss, d = 2, n = n, trans = "BC",
   lambda = lambda, rotate = FALSE)
@@ -67,7 +65,7 @@ x3 <- ru(logf = gpd_logpost, ss = ss, d = 2, n = n, trans = "BC",
 x4 <- ru(logf = gpd_logpost, ss = ss, d = 2, n = n, trans = "BC",
   lambda = lambda, var_names = c("sigma", "xi"))
 
-## ----fig.show='hold', out.width="45%"-----------------------------------------
+## ----fig.show='hold', out.width="45%", eval = got_revdbayes-------------------
 plot(x1, ru_scale = TRUE, cex.main = 0.75, cex.lab = 0.75, 
   main = paste("mode relocation \n pa = ", round(x1$pa, 3)))
 plot(x2, ru_scale = TRUE, cex.main = 0.75, cex.lab = 0.75, 
@@ -77,13 +75,14 @@ plot(x3, ru_scale = TRUE, cex.main = 0.75, cex.lab = 0.75,
 plot(x4, ru_scale = TRUE, cex.main = 0.75, cex.lab = 0.75,
   main = paste("Box-Cox, mode relocation and rotation \n pa = ", round(x4$pa, 3)))
 
-## ----fig.align='center'-------------------------------------------------------
+## ----fig.align='center', eval = got_revdbayes---------------------------------
 plot(x4, xlab = "sigma", ylab = "xi")
 
-## -----------------------------------------------------------------------------
+## ----eval = got_revdbayes-----------------------------------------------------
 summary(x4)
 
 ## -----------------------------------------------------------------------------
+n <- 10000
 # Sampling on original scale ----------------
 x1 <- ru(logf = dlnorm, log = TRUE, d = 1, n = n, lower = 0, init = 1)
 x1$pa

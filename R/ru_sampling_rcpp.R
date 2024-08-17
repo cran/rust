@@ -34,11 +34,14 @@
 #'   component \code{box} in the returned object gives the ratio-of-uniforms
 #'   bounding box that would have been used.
 #' @param d A positive integer scalar. The dimension of \eqn{f}.
-#' @param init A numeric vector. Initial estimates of the mode of \code{logf}.
+#' @param init A numeric vector of length \code{d}. Initial estimate of the
+#'   mode of \code{logf}.
 #'   If \code{trans = "BC"} or \code{trans = "user"} this is \emph{after}
 #'   Box-Cox transformation or user-defined transformation, but \emph{before}
 #'   any rotation of axes.
 #'   If \code{init} is not supplied then \code{rep(1, d)} is used.
+#'   If \code{length(init) = 1} and \code{d > 1} then
+#'   \code{init <- rep(init, length.out = d)} is used.
 #' @param mode A numeric vector of length \code{d}.  The mode of \code{logf}.
 #'   If \code{trans = "BC"} or \code{trans = "user"} this is \emph{after}
 #'   Box-Cox transformation or user-defined transformation, but \emph{before}
@@ -78,7 +81,7 @@
 #'   \item A list with components
 #'   \describe{
 #'     \item{lambda}{A numeric vector.  Box-Cox parameters (required).}
-#'     \item{gm}{A numeric vector.  Box-cox scaling parameters (optional).
+#'     \item{gm}{A numeric vector.  Box-Cox scaling parameters (optional).
 #'       If supplied this overrides any \code{gm} supplied by the individual
 #'       \code{gm} argument described below.}
 #'     \item{init_psi}{A numeric vector.  Initial estimate of mode \emph{after}
@@ -94,7 +97,7 @@
 #' }
 #' @param lambda_tol A numeric scalar.  Any values in lambda that are less
 #'  than \code{lambda_tol} in magnitude are set to zero.
-#' @param gm A numeric vector. Box-cox scaling parameters (optional). If
+#' @param gm A numeric vector. Box-Cox scaling parameters (optional). If
 #'   \code{lambda$gm} is supplied in input list \code{lambda} then
 #'   \code{lambda$gm} is used, not \code{gm}.
 #' @param rotate A logical scalar. If TRUE (\code{d} > 1 only) use Choleski
@@ -111,7 +114,7 @@
 #'   transformation are calculated inside \code{ru}.
 #' @param r A numeric scalar.  Parameter of generalized ratio-of-uniforms.
 #' @param ep A numeric scalar.  Controls initial estimates for optimisations
-#'   to find the \eqn{b}-bounding box parameters.  The default (\code{ep}=0)
+#'   to find the \eqn{b}-bounding box parameters.  The default (\code{ep} = 0)
 #'   corresponds to starting at the mode of \code{logf} small positive values
 #'   of \code{ep} move the constrained variable slightly away from the mode in
 #'   the correct direction.  If \code{ep} is negative its absolute value is
@@ -119,25 +122,19 @@
 #' @param a_algor,b_algor Character scalars.  Either \code{"nlminb"} or
 #'   \code{"optim".}
 #'   Respective optimisation algorithms used to find \eqn{a(r)} and
-#'   (\ifelse{html}{\eqn{b}\out{<sub>i</sub>}\out{<sup>-</sup>}(r)}{
-#'   \eqn{b_i^-(r)}},
-#'   \ifelse{html}{\eqn{b}\out{<sub>i</sub>}\out{<sup>+</sup>}(r)}{
-#'   \eqn{b_i^+(r)}}).
+#'   (\ifelse{html}{\eqn{b}\out{<sub>i</sub>}\out{<sup>-</sup>}(r)}{\eqn{b_i^-(r)}},
+#'   \ifelse{html}{\eqn{b}\out{<sub>i</sub>}\out{<sup>+</sup>}(r)}{\eqn{b_i^+(r)}}).
 #' @param a_method,b_method Character scalars.  Respective methods used by
 #'   \code{optim} to find \eqn{a(r)} and
-#'   (\ifelse{html}{\eqn{b}\out{<sub>i</sub>}\out{<sup>-</sup>}(r)}{
-#'   \eqn{b_i^-(r)}},
-#'   \ifelse{html}{\eqn{b}\out{<sub>i</sub>}\out{<sup>+</sup>}(r)}{
-#'   \eqn{b_i^+(r)}}).
+#'   (\ifelse{html}{\eqn{b}\out{<sub>i</sub>}\out{<sup>-</sup>}(r)}{\eqn{b_i^-(r)}},
+#'   \ifelse{html}{\eqn{b}\out{<sub>i</sub>}\out{<sup>+</sup>}(r)}{\eqn{b_i^+(r)}}).
 #'   Only used if \code{optim} is the chosen algorithm.  If \code{d} = 1 then
 #'   \code{a_method} and \code{b_method} are set to \code{"Brent"} without
 #'   warning.
 #' @param a_control,b_control  Lists of control arguments to \code{optim} or
 #'   \code{nlminb} to find \eqn{a(r)} and
-#'   (\ifelse{html}{\eqn{b}\out{<sub>i</sub>}\out{<sup>-</sup>}(r)}{
-#'   \eqn{b_i^-(r)}},
-#'   \ifelse{html}{\eqn{b}\out{<sub>i</sub>}\out{<sup>+</sup>}(r)}{
-#'   \eqn{b_i^+(r)}})
+#'   (\ifelse{html}{\eqn{b}\out{<sub>i</sub>}\out{<sup>-</sup>}(r)}{\eqn{b_i^-(r)}},
+#'   \ifelse{html}{\eqn{b}\out{<sub>i</sub>}\out{<sup>+</sup>}(r)}{\eqn{b_i^+(r)}})
 #'   respectively.
 #' @param var_names A character (or numeric) vector of length \code{d}.  Names
 #'   to give to the column(s) of the simulated values.
@@ -159,7 +156,8 @@
 #'   \href{https://paulnorthrop.github.io/rust/articles/rust-a-vignette.html}{
 #'   Introducing rust} vignette. See also
 #'   \href{https://paulnorthrop.github.io/rust/articles/rust-c-using-rcpp-vignette.html}{
-#'   Rusting faster: Simulation using Rcpp}
+#'   Rusting faster: Simulation using Rcpp}.
+#'
 #'   These vignettes can also be accessed using
 #'   \code{vignette("rust-a-vignette", package = "rust")} and
 #'   \code{vignette("rust-c-using-rcpp-vignette", package = "rust")}.
@@ -561,18 +559,18 @@ ru_rcpp <- function(logf, ..., n = 1, d = 1, init = NULL, mode = NULL,
     # If any components of lower or upper are negative then set them to zero.
     lower <- pmax(0, lower)
     lower <- ifelse(lambda == 0, gm * log(lower),
-                    (lower^lambda - 1) / (lambda * gm ^ (lambda -1)))
+                    (lower ^lambda - 1) / (lambda * gm ^ (lambda -1)))
     upper <- ifelse(lambda == 0, gm * log(upper),
-                    (upper^lambda - 1) / (lambda * gm ^ (lambda -1)))
+                    (upper ^lambda - 1) / (lambda * gm ^ (lambda -1)))
   }
   # Check that the optimisation algorithm is appropriate given the bounds in
   # lower and upper.  If not then change it, with a warning.
-  if (d == 1 & a_algor == "optim" & any(is.infinite(c(lower,upper)))) {
+  if (d == 1 & a_algor == "optim" & any(is.infinite(c(lower, upper)))) {
     a_algor = "nlminb"
     warning("For d = 1 finite lower and upper bounds must be supplied when
             using a_algor = `optim'.  a_algor has been changed to `nlminb'")
   }
-  if (d == 1 & b_algor == "optim" & any(is.infinite(c(lower,upper)))) {
+  if (d == 1 & b_algor == "optim" & any(is.infinite(c(lower, upper)))) {
     b_algor = "nlminb"
     warning("For d = 1 finite lower and upper bounds must be supplied when
             using b_algor = `optim'.  b_algor has been changed to `nlminb'")

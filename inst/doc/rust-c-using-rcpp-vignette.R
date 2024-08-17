@@ -1,10 +1,6 @@
 ## ----include = FALSE----------------------------------------------------------
 knitr::opts_chunk$set(comment = "#>", collapse = TRUE)
-
-required <- c("revdbayes")
-
-if (!all(unlist(lapply(required, function(pkg) requireNamespace(pkg, quietly = TRUE)))))
-  knitr::opts_chunk$set(eval = FALSE)
+got_revdbayes <- requireNamespace("revdbayes", quietly = TRUE)
 
 ## -----------------------------------------------------------------------------
 library(rust)
@@ -77,7 +73,7 @@ if (got_microbenchmark) {
   print(res, signif = 4)
 }  
 
-## -----------------------------------------------------------------------------
+## ----eval = got_revdbayes-----------------------------------------------------
 set.seed(46)
 # Sample data from a GP(sigma, xi) distribution
 gpd_data <- rgpd(m = 100, xi = -0.5, sigma = 1)
@@ -86,7 +82,7 @@ ss <- gpd_sum_stats(gpd_data)
 # Calculate an initial estimate
 init <- c(mean(gpd_data), 0)
 
-## -----------------------------------------------------------------------------
+## ----eval = got_revdbayes-----------------------------------------------------
 # Arguments for ru_rcpp
 ptr_gp <- create_xptr("loggp")
 for_ru_rcpp <- c(list(logf = ptr_gp, init = init, d = 2, n = n,
@@ -109,7 +105,7 @@ lambda <- find_lambda_one_d_rcpp(logf = ptr_gam, alpha = alpha,
                                  max_phi = max_phi)
 lambda
 
-## -----------------------------------------------------------------------------
+## ----eval = got_revdbayes-----------------------------------------------------
 temp <- do.call(gpd_init, ss)
 min_phi <- pmax(0, temp$init_phi - 2 * temp$se_phi)
 max_phi <- pmax(0, temp$init_phi + 2 * temp$se_phi)
