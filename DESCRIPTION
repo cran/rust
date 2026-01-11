@@ -1,8 +1,8 @@
 Package: rust
 Type: Package
 Title: Ratio-of-Uniforms Simulation with Transformation
-Version: 1.4.3
-Date: 2024-08-14
+Version: 1.4.4
+Date: 2026-01-11
 Authors@R: person(c("Paul", "J."), "Northrop", email = "p.northrop@ucl.ac.uk",
   role = c("aut", "cre", "cph"))
 Description: Uses the generalized ratio-of-uniforms (RU) method to simulate
@@ -21,7 +21,7 @@ Imports: graphics, Rcpp (>= 0.12.10), stats
 License: GPL (>= 2)
 Encoding: UTF-8
 Depends: R (>= 3.3.0)
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.3
 Suggests: bang, knitr, microbenchmark, revdbayes, rmarkdown, testthat
 VignetteBuilder: knitr
 URL: https://paulnorthrop.github.io/rust/,
@@ -30,8 +30,8 @@ BugReports: https://github.com/paulnorthrop/rust/issues
 LinkingTo: Rcpp (>= 0.12.10), RcppArmadillo
 Config/testthat/edition: 3
 NeedsCompilation: yes
-Packaged: 2024-08-17 06:07:12 UTC; Paul
+Packaged: 2026-01-11 14:55:49 UTC; Paul
 Author: Paul J. Northrop [aut, cre, cph]
 Maintainer: Paul J. Northrop <p.northrop@ucl.ac.uk>
 Repository: CRAN
-Date/Publication: 2024-08-17 06:30:02 UTC
+Date/Publication: 2026-01-11 15:30:02 UTC

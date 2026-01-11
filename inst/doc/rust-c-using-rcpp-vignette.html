@@ -12,7 +12,7 @@
 
 <meta name="author" content="Paul Northrop" />
 
-<meta name="date" content="2024-08-17" />
+<meta name="date" content="2026-01-11" />
 
 <title>Rusting Faster: Simulation using Rcpp</title>
 
@@ -50,8 +50,9 @@ overflow: visible;
 }
 </style>
 <style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -363,7 +364,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 <h1 class="title toc-ignore">Rusting Faster: Simulation using Rcpp</h1>
 <h4 class="author">Paul Northrop</h4>
-<h4 class="date">2024-08-17</h4>
+<h4 class="date">2026-01-11</h4>
 
 
 <div id="TOC">
@@ -531,8 +532,9 @@ We use the <strong>microbenchmark</strong> package <span class="citation">(Mersm
 <span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a><span class="cf">if</span> (got_microbenchmark) {</span>
 <span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>  <span class="fu">library</span>(microbenchmark)</span>
 <span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>}  </span>
-<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a><span class="co"># Set the size of the simulated sample</span></span>
-<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>n <span class="ot">&lt;-</span> <span class="dv">1000</span></span></code></pre></div>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a><span class="co">#&gt; Warning: package &#39;microbenchmark&#39; was built under R version 4.5.2</span></span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a><span class="co"># Set the size of the simulated sample</span></span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a>n <span class="ot">&lt;-</span> <span class="dv">1000</span></span></code></pre></div>
 <p>It is assumed that the user has already compiled their C++ functions
 and made them available to their R session, either using the
 <code>Rcpp::sourceCpp</code> function
@@ -582,8 +584,8 @@ density, based on the C++ function <code>logdN01</code> in the example
 <span id="cb4-37"><a href="#cb4-37" tabindex="-1"></a>}</span>
 <span id="cb4-38"><a href="#cb4-38" tabindex="-1"></a><span class="co">#&gt; Unit: milliseconds</span></span>
 <span id="cb4-39"><a href="#cb4-39" tabindex="-1"></a><span class="co">#&gt;  expr    min     lq   mean median     uq    max neval</span></span>
-<span id="cb4-40"><a href="#cb4-40" tabindex="-1"></a><span class="co">#&gt;   old 14.330 15.970 17.410 16.920 18.890 22.490   100</span></span>
-<span id="cb4-41"><a href="#cb4-41" tabindex="-1"></a><span class="co">#&gt;   new  2.058  2.183  2.436  2.272  2.458  5.092   100</span></span></code></pre></div>
+<span id="cb4-40"><a href="#cb4-40" tabindex="-1"></a><span class="co">#&gt;   old 15.840 18.160 20.040 19.090 21.110 37.570   100</span></span>
+<span id="cb4-41"><a href="#cb4-41" tabindex="-1"></a><span class="co">#&gt;   new  2.078  2.253  2.669  2.423  2.739  6.643   100</span></span></code></pre></div>
 <p>As we would hope, <code>ru_rcpp</code> is faster than
 <code>ru</code>. If we start from the same random number seed we get the
 same simulated values from <code>ru</code> and <code>ru_rcpp</code>.</p>
@@ -628,9 +630,9 @@ double logdmvnorm(const Rcpp::NumericVector&amp; x, const Rcpp::List&amp; pars) 
 <span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a>  <span class="fu">print</span>(res, <span class="at">signif =</span> <span class="dv">4</span>)</span>
 <span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a>}  </span>
 <span id="cb7-22"><a href="#cb7-22" tabindex="-1"></a><span class="co">#&gt; Unit: milliseconds</span></span>
-<span id="cb7-23"><a href="#cb7-23" tabindex="-1"></a><span class="co">#&gt;  expr     min      lq    mean  median      uq    max neval</span></span>
-<span id="cb7-24"><a href="#cb7-24" tabindex="-1"></a><span class="co">#&gt;   old 177.900 185.200 197.800 189.600 194.200 560.70   100</span></span>
-<span id="cb7-25"><a href="#cb7-25" tabindex="-1"></a><span class="co">#&gt;   new   8.451   8.902   9.741   9.242   9.873  13.74   100</span></span></code></pre></div>
+<span id="cb7-23"><a href="#cb7-23" tabindex="-1"></a><span class="co">#&gt;  expr    min      lq   mean  median     uq    max neval</span></span>
+<span id="cb7-24"><a href="#cb7-24" tabindex="-1"></a><span class="co">#&gt;   old 185.10 196.500 218.30 205.700 232.90 400.50   100</span></span>
+<span id="cb7-25"><a href="#cb7-25" tabindex="-1"></a><span class="co">#&gt;   new   8.54   9.246  10.43   9.895  11.33  18.65   100</span></span></code></pre></div>
 <p>Again, the improvement in speed obtained using Rcpp is clear.</p>
 </div>
 <div id="log-normal-density-after-box-cox-transformation" class="section level3">
@@ -661,9 +663,9 @@ double logdlnorm(const Rcpp::NumericVector&amp; x, const Rcpp::List&amp; pars) {
 <span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a>  <span class="fu">print</span>(res, <span class="at">signif =</span> <span class="dv">4</span>)</span>
 <span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a>}  </span>
 <span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a><span class="co">#&gt; Unit: milliseconds</span></span>
-<span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a><span class="co">#&gt;  expr    min    lq   mean median     uq   max neval</span></span>
-<span id="cb9-13"><a href="#cb9-13" tabindex="-1"></a><span class="co">#&gt;   old 33.450 37.03 39.180 38.900 40.710 58.21   100</span></span>
-<span id="cb9-14"><a href="#cb9-14" tabindex="-1"></a><span class="co">#&gt;   new  4.828  5.04  6.229  5.282  5.625 69.34   100</span></span></code></pre></div>
+<span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a><span class="co">#&gt;  expr    min     lq   mean median     uq     max neval</span></span>
+<span id="cb9-13"><a href="#cb9-13" tabindex="-1"></a><span class="co">#&gt;   old 31.890 36.670 39.790  38.15 39.640 179.200   100</span></span>
+<span id="cb9-14"><a href="#cb9-14" tabindex="-1"></a><span class="co">#&gt;   new  4.886  5.156  5.484   5.32  5.515   9.001   100</span></span></code></pre></div>
 </div>
 <div id="generalized-pareto-posterior-density" class="section level3">
 <h3>Generalized Pareto posterior density</h3>
@@ -730,8 +732,8 @@ initial value in the search for the posterior mode.</p>
 <span id="cb12-13"><a href="#cb12-13" tabindex="-1"></a>}  </span>
 <span id="cb12-14"><a href="#cb12-14" tabindex="-1"></a><span class="co">#&gt; Unit: milliseconds</span></span>
 <span id="cb12-15"><a href="#cb12-15" tabindex="-1"></a><span class="co">#&gt;  expr   min    lq  mean median    uq    max neval</span></span>
-<span id="cb12-16"><a href="#cb12-16" tabindex="-1"></a><span class="co">#&gt;   old 70.10 74.89 77.41  76.59 78.22 130.00   100</span></span>
-<span id="cb12-17"><a href="#cb12-17" tabindex="-1"></a><span class="co">#&gt;   new 15.15 16.05 17.34  16.65 18.24  24.91   100</span></span></code></pre></div>
+<span id="cb12-16"><a href="#cb12-16" tabindex="-1"></a><span class="co">#&gt;   old 71.27 76.58 83.00  80.59 85.02 194.40   100</span></span>
+<span id="cb12-17"><a href="#cb12-17" tabindex="-1"></a><span class="co">#&gt;   new 15.46 16.08 17.96  17.44 18.61  30.49   100</span></span></code></pre></div>
 </div>
 </div>
 <div id="examples-find_lambda_one_d_rcpp-and-find_lambda_rcpp" class="section level2">
@@ -806,10 +808,10 @@ of the transformation.</p>
 <span id="cb15-24"><a href="#cb15-24" tabindex="-1"></a><span class="co">#&gt; 0.12670792 0.02477219 </span></span>
 <span id="cb15-25"><a href="#cb15-25" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb15-26"><a href="#cb15-26" tabindex="-1"></a><span class="co">#&gt; $phi_to_theta</span></span>
-<span id="cb15-27"><a href="#cb15-27" tabindex="-1"></a><span class="co">#&gt; &lt;pointer: 0x000002574a6fd920&gt;</span></span>
+<span id="cb15-27"><a href="#cb15-27" tabindex="-1"></a><span class="co">#&gt; &lt;pointer: 0x000001a14a5e7510&gt;</span></span>
 <span id="cb15-28"><a href="#cb15-28" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb15-29"><a href="#cb15-29" tabindex="-1"></a><span class="co">#&gt; $log_j</span></span>
-<span id="cb15-30"><a href="#cb15-30" tabindex="-1"></a><span class="co">#&gt; &lt;pointer: 0x000002574a6fd880&gt;</span></span>
+<span id="cb15-30"><a href="#cb15-30" tabindex="-1"></a><span class="co">#&gt; &lt;pointer: 0x000001a14a5e7400&gt;</span></span>
 <span id="cb15-31"><a href="#cb15-31" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb15-32"><a href="#cb15-32" tabindex="-1"></a><span class="co">#&gt; $user_args</span></span>
 <span id="cb15-33"><a href="#cb15-33" tabindex="-1"></a><span class="co">#&gt; $user_args$xm</span></span>
